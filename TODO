@@ -1,0 +1,50 @@
+tam jak jest oszukanie, że moduł się załadował
+
+list[actualLoadingPath].setDefine([], function(){
+
+});
+
+
+może warto by zrobić 
+
+list[actualLoadingPath].setDefine([]);
+
+i zamiast evaluować, zwracać właśnie tą wartość.
+
+mamy niepotrzebne przekłamanie że się moduł załadował, mimo że się nie załadował
+
+
+
+
+
+na początku biblioteki trzeba zamrozić symbol require, oraz define
+po to żeby inne skrypty nie nadpisały tych symbolów
+
+
+
+
+
+żeby zintegrować runnerBox-a ze starterem, trzeba rozwiązać problem skutecznego i szybkiego przeszukiwania doma
+        trzeba znaleźć wydajną metodę do iterowania po elementach doma, tak żeby znajdywało tylko pierwsze elementy do uruchomienia
+            to można na samym końcu, bez priorytetu ...
+
+        //http://ocdn.eu/static/template-engine/YTE7MDA_/0886d7be93acb172bb82f2db286c5d17/build/uststd.uncompressed.js
+            //źródła biblioteki uststd ...
+            
+        http://www.codecouch.com/2012/05/adding-document-queryselectorall-support-to-ie-7/
+        http://www.javascriptkit.com/dhtmltutors/css_selectors_api.shtml
+
+
+
+inne sposoby łądowania zasobów nie będących strichte modułem AMD
+    define([
+        'uststd/uststd',
+        "./adsinit",
+        "css!./onet.sg.contentwidget/contentwidget.css"
+    ], function(
+        uststd,
+        onetAds,
+        cssLoader){
+
+
+
