@@ -630,7 +630,7 @@
             script.async  = true;
             script.defer  = true;
             
-            script.setAttribute("crossorigin", "anonymous");
+            //script.setAttribute("crossorigin", "anonymous");
             
             
 	        script.onreadystatechange = onreadystatechange;
