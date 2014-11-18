@@ -1,7 +1,15 @@
+require.config({
+    paths: {}   //ścieżki
+    crosdomain: ["domena1.pl"]          // lista domen do których będzie doklejany nagłówek kros - domenowy
+})
+
+
+
+
+
 tam jak jest oszukanie, że moduł się załadował
 
 list[actualLoadingPath].setDefine([], function(){
-
 });
 
 
