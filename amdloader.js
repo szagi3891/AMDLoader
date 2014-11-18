@@ -56,6 +56,21 @@
     }
     
     
+    function showWarning(num, caption) {
+        
+        if (typeof(console) !== "undefined" && typeof(console.warn) === "function") {
+            
+            var messFormat = "amdLoader: errorNumber: " + num;
+            
+            if (typeof(caption) === "string" && caption !== "") {
+                messFormat += ": " + caption;
+            }
+            
+            console.warn(messFormat);
+        }
+    }
+    
+    
     function toUrl(url) {
         
         return scriptLoader.resolvePath(url);
@@ -113,7 +128,7 @@
 
 		if (scriptLoader === null) {
 
-            errorNumber(4);
+            showWarning(4);
 
 		} else {
 

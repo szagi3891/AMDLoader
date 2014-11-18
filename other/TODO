@@ -1,6 +1,4 @@
 
-zamienic w amdLoaderze błędy (4) na worningi, i wyświetlać warningi jesli jest zdefiniowana w przeglądarce funkcja console.warn
-
 zmienić w amdLoaderze sposób oznaczania tego że dany moduł był uruchomiony (nie można usuwać atrybutów data-ran-module) ze względu na kesz google.
     
     
