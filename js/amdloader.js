@@ -123,16 +123,16 @@
 
     function createModuleList() {
         
-    	var list          = {};	//lista z modułami
+        var list          = {};	//lista z modułami
 		var waitingDefine = [];	//to co wpadło za pomocą funkcji define, wpada na tąże listę
         
-    	return {
+        return {
 
             requireModulesWithModuleBase : requireModulesWithModuleBase,
-    		requireModules               : requireModules,
-    		requireOne                   : requireOne,
+            requireModules               : requireModules,
+            requireOne                   : requireOne,
             define                       : defineOne
-    	};
+        };
         
         
         function getBasePath(path, callback) {
@@ -235,8 +235,8 @@
         }
         
         
-    	//zwraca listę modułów - pod warunkiem że wszystkei zostały poprawnie zainicjowane
-    	function requireModules(deps, callback) {
+        //zwraca listę modułów - pod warunkiem że wszystkei zostały poprawnie zainicjowane
+        function requireModules(deps, callback) {
             
             var isExec   = false;
             var retValue = {};
@@ -302,10 +302,10 @@
                     }
                 }
             }
-    	}
+        }
         
         
-    	function requireOne(path, callback) {
+        function requireOne(path, callback) {
             
             if (path in list) {
                 
@@ -319,10 +319,10 @@
                     
                     definePushToModule(true, path);
                 });
-	    	}
+            }
             
             list[path].get(callback);
-    	}
+        }
 
 
 		function defineOne(deps, moduleDefine) {
@@ -449,20 +449,20 @@
     
     function createModule(nameModule) {
 
-    	var isInit        = false;
+        var isInit        = false;
         
         var depsNamesSave = null;
-    	var evalValue     = null;
+        var evalValue     = null;
 
-    	var waiting       = queryCallbackAsync();
+        var waiting       = queryCallbackAsync();
         
         
-    	return {
+        return {
             "isDefine"  : isDefine,
-    		"setDefine" : setDefine,
-    		"getDeps"   : getDeps,
-    		"get"       : get
-    	};
+            "setDefine" : setDefine,
+            "getDeps"   : getDeps,
+            "get"       : get
+        };
         
         
         function isDefine() {
@@ -470,21 +470,21 @@
         }
         
         
-    	function get(callback) {
+        function get(callback) {
             
 			waiting.add(callback);
-    	}
+        }
         
         
-    	function setDefine(depsName, defineModuleFunction) {
+        function setDefine(depsName, defineModuleFunction) {
             
-    		if (isInit === false) {
+            if (isInit === false) {
                 
-    			isInit = true;
+                isInit = true;
                 
                 depsNamesSave = depsName;
                 
-    			modulesList.requireModulesWithModuleBase(nameModule, depsName, function(){
+                modulesList.requireModulesWithModuleBase(nameModule, depsName, function(){
                     
                     var depsValue = Array.prototype.slice.call(arguments, 0);
                     
@@ -504,16 +504,16 @@
                     }
                     
                     waiting.exec([evalValue]);
-    			});
+                });
 
-    		} else {
+            } else {
             
                 errorNumber(15, nameModule);
-    		}
-    	}
+            }
+        }
         
         
-    	function getDeps() {
+        function getDeps() {
             
             if (isInit === true) {
                 
@@ -523,7 +523,7 @@
             
                 return [];
             }
-    	}
+        }
     }
         
 	function createScriptLoader(configPath) {
@@ -619,43 +619,44 @@
 		}
         
         
-	    function loadScript(path, callback) {
-	        
-	        var isExec    = false;                    
-	        var script    = document.createElement('script');
+        function loadScript(path, callback) {
+            
+            var isExec    = false;                    
+            var script    = document.createElement('script');
 
-	        script.type   = 'text/javascript';
-	        script.src    = path;
-	        script.onload = runCallback;
+            script.type   = 'text/javascript';
+            script.src    = path;
+            script.onload = runCallback;
             script.async  = true;
             script.defer  = true;
             
             //script.setAttribute("crossorigin", "anonymous");
             
             
-	        script.onreadystatechange = onreadystatechange;
-	        
-	        document.getElementsByTagName('head')[0].appendChild(script);
-	        
+            script.onreadystatechange = onreadystatechange;
+            
+            document.getElementsByTagName('head')[0].appendChild(script);
+            
             return script;
             
             
 			function onreadystatechange() {
-	            
-	            if (script.readyState === 'loaded' || script.readyState === 'complete')
-	                runCallback();
-	        }
-
-	        function runCallback() {
-	            
-	            if (isExec === true) {
-	                return;
-	            }
-
-	            isExec = true;
                 
-	            callback(script);
-	        }
+                if (script.readyState === 'loaded' || script.readyState === 'complete') {
+                    runCallback();
+                }
+            }
+
+            function runCallback() {
+                
+                if (isExec === true) {
+                    return;
+                }
+
+                isExec = true;
+                
+                callback(script);
+            }
             
             /*
             crossorigin:
@@ -669,7 +670,7 @@
             http://stackoverflow.com/questions/5913978/cryptic-script-error-reported-in-javascript-in-chrome-and-firefox
             https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script
             */
-	    }
+        }
 	}
 
     function forEach(list, callback){
@@ -681,7 +682,7 @@
 	
     function isNoEmptyString(value) {
 
-    	return typeof(value) === "string" && value !== "";
+        return typeof(value) === "string" && value !== "";
     }
     
                                     //kolejka żądań opróżniana jest synchronicznie
