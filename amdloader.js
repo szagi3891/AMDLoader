@@ -22,6 +22,8 @@
     19 : "queryCallback: exec: zdublowane wywołanie"
     20 : "queryCallback: exec: array expected"
     21 : "queryCallback: ready -> function expected"
+    22 : crosdomain prop - wielokrotnie zdefiniowana
+    23 : crosdomain prop - parametr nie jest "niepustym stringiem"
     */
     
 										//interfejs publiczny
@@ -80,10 +82,10 @@
 	function configGlobal(conf) {
 
 		if (scriptLoader === null) {
-
+            
 			if (valid(conf.paths)) {
 
-				scriptLoader = createScriptLoader(conf.paths);
+				scriptLoader = createScriptLoader(conf.paths, getMapCrossorigin(conf.crossorigin));
             
 			} else {
                 
@@ -94,7 +96,41 @@
             
             errorNumber(2);
 		}
-
+        
+                                        //konwertuje na tablicę, która posiada niepuste stringi
+                                        //(w przypadku innego typu na wejściu pusta tablica)
+        function getMapCrossorigin(list) {
+            
+            var ret = {};
+            
+            if (list && list.length > 0) {
+                
+                for (var i=0; i<list.length; i++) {
+                    
+                    var prop = list[i];
+                    
+                    if (isNoEmptyString(prop)) {
+                        
+                        if (prop in ret) {
+                            
+                            errorNumber(22, prop);
+                        
+                        } else {
+                            
+                            ret[prop] = true;
+                        }
+                    
+                    } else {
+                        
+                        errorNumber(23, prop);
+                    }
+                }
+            }
+            
+            return ret;
+        }
+        
+        
 		function valid(paths) {
             
 			var count = 0;
@@ -541,7 +577,7 @@
         }
     }
         
-	function createScriptLoader(configPath) {
+	function createScriptLoader(configPath, crossorigin) {
         
 											//znaczniki script, z aktualnie ładowanymi modułami
 		var loadingScriprs = {};
@@ -633,6 +669,19 @@
             }
 		}
         
+                                            //sprawdzam, czy dla tej domeny włączyć nagłówek crossorigin="anonimus"
+        function isCrossorigin(path) {
+            
+            for (var prefix in crossorigin) {
+                
+                if (path.substr(0, prefix.length) === prefix) {
+                    return true;
+                }
+            }
+            
+            return false;
+        }
+        
         
         function loadScript(path, callback) {
             
@@ -645,8 +694,10 @@
             script.async  = true;
             script.defer  = true;
             
-            //script.setAttribute("crossorigin", "anonymous");
             
+            if (isCrossorigin(path)) {
+                script.setAttribute("crossorigin", "anonymous");
+            }            
             
             script.onreadystatechange = onreadystatechange;
             
@@ -684,6 +735,10 @@
 
             http://stackoverflow.com/questions/5913978/cryptic-script-error-reported-in-javascript-in-chrome-and-firefox
             https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script
+            
+            
+            https://github.com/stacktracejs/stacktrace.js
+            https://cdnjs.cloudflare.com/ajax/libs/stacktrace.js/0.6.4/stacktrace.js
             */
         }
 	}
@@ -1103,16 +1158,16 @@
 
             var mapAmd = JSONParse(map);
 
-            runRequireMap(mapAmd, getListPreLoad(), getTimeoutStart());
-
+            runRequireMap(mapAmd, getListPreLoad(), getTimeoutStart(), getCrossorigin());
+            
             return true;
         }
-
+        
         function getListPreLoad() {
 
             var list = node.getAttribute("data-amd-preload");
-
-            if (typeof(list) === "string" && list !== "") {
+            
+            if (isNoEmptyString(list)) {
                 return list.split(",");
             } else {
                 return [];
@@ -1130,13 +1185,24 @@
             }
         }
         
+        function getCrossorigin() {
+            
+            var value = node.getAttribute("data-crossorigin");
+            
+            if (isNoEmptyString(value)) {
+                return value.split(",");
+            } else {
+                return [];
+            }
+        }
+        
         function isInt(value){
             
             return (typeof(value) === 'number' && !isNaN(value) && (value === (value | 0)));
         }
     }
 
-    function runRequireMap(pathConfig, listPreload, timeoutStart){
+    function runRequireMap(pathConfig, listPreload, timeoutStart, listCrossorigin){
         
         var runMain = onlyOnce(function(){
             setTimeout(main, 0);
@@ -1148,7 +1214,8 @@
         function main() {
 
             require.config({
-                paths: pathConfig
+                paths: pathConfig,
+                crossorigin: listCrossorigin
             });
             
             if (listPreload.length > 0) {
@@ -1270,6 +1337,11 @@
         } else {
             throw Error('jsstarter -> addEvent -> nieprawidlowe odgalezienie');
         }
+    }
+    
+    function isNoEmptyString(value) {
+        
+        return (typeof(value) === "string" && value !== "");
     }
 
 }());
