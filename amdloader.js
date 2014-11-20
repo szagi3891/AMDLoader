@@ -24,10 +24,19 @@
     21 : "queryCallback: ready -> function expected"
     22 : crosdomain prop - wielokrotnie zdefiniowana
     23 : crosdomain prop - parametr nie jest "niepustym stringiem"
+	
+	24 : requireGlobal - nieprawidłowe parametry wejściowe
+	25 : defineGlobal  - nieprawidłowe parametry wejściowe
+		->1 : drugi argument powinien być funkcją
+		->2 : spodziewano sie niepustej tablicy
+		->3 : spodziewano się tablicy
+	
+	26 : spodziewano się niepustego stringa na wejściu funkcji toUrl
     */
     
 										//interfejs publiczny
 	window.require          = requireGlobal;
+	window.requirejs        = requireGlobal;			//depreceted ...
 	window.define           = defineGlobal;
 	requireGlobal.config    = configGlobal;
 
@@ -75,7 +84,14 @@
     
     function toUrl(url) {
         
-        return scriptLoader.resolvePath(url);
+		if (isNoEmptyString(url)) {
+			
+			return scriptLoader.resolvePath(url);
+			
+		} else {
+			
+			errorNumber(26);
+		}
     }
     
     
@@ -149,29 +165,62 @@
 	}
 
 	function requireGlobal(deps, callback) {
-
+		
 		if (scriptLoader === null) {
             
             errorNumber(3);
 
 		} else {
-            
-			modulesList.requireModules(deps, callback);
+			
+			if (isValidParams(deps, callback, 24, true)) {
+				modulesList.requireModules(deps, callback);
+			}
 		}
 	}
-
+	
 	function defineGlobal(deps, moduleDefine) {
 
 		if (scriptLoader === null) {
-
+			
             showWarning(4);
+		
+		} else {
+			
+			if (isValidParams(deps, moduleDefine, 25, false)) {
+				modulesList.define(deps, moduleDefine);
+			}
+		}
+	}
+	
+	function isValidParams(deps, callback, code, checkNoEmptyDeps) {
+
+		if (isArray(deps)) {
+
+			if (checkNoEmptyDeps === false || deps.length > 0) {
+
+				if (typeof(callback) === "function") {
+
+					//ok
+					return true;
+
+				} else {
+					
+					errorNumber(code + "->1");		//, prop
+				}
+
+			} else {
+
+				errorNumber(code + "->2");
+			}
 
 		} else {
 
-			modulesList.define(deps, moduleDefine);
+			errorNumber(code + "->3");
 		}
+		
+		return false;
 	}
-
+	
     function createModuleList() {
         
         var list          = {};	//lista z modułami
@@ -1219,7 +1268,7 @@
             });
             
             if (listPreload.length > 0) {
-                require(listPreload);
+				require(listPreload, function(){});
             }
             
             require.runnerBox.runElement(document);

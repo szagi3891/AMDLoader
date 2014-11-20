@@ -6,7 +6,8 @@ define(["./mod1"], function(mod1){
     
     
     console.log("odpalam ściąganie mod5");
-    require(["lib/mod5"]);
+    require(["lib/mod5"], function(){
+	});
     
     
         //testowe pobranie
