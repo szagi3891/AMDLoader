@@ -33,7 +33,7 @@
 
     requireGlobal.runnerBox = createRunnerBox();
     
-    requireGlobal.toUrl     = toUrl;
+	requireGlobal.toUrl     = toUrl;
     
 
 	var modulesList    = createModuleList();	//mapa z modułami (oraz zależnościami)
