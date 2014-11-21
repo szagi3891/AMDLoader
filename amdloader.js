@@ -32,19 +32,40 @@
 		->3 : spodziewano się tablicy
 	
 	26 : spodziewano się niepustego stringa na wejściu funkcji toUrl
+
+								poprawne properties
+	27 : błędy związane z property window.require
+	28 : błędy związane z property window.define
+	29 : błędy związane z property require.config
+	30 : błędy związane z property require.runnerBox
+	
+								zdeprecjonowane properties
+	31 : błędy związane z property window.requirejs
+	32 : błędy związane z property window.require.toUrl
+	33 : błędy związane z property window.require.version
+	34 : błędy związane z property window.define.amd
+	35 : błędy związane z property window.require.isBrowser
+	
+		->1 : odczyt zdeprecjonowanej property
+		->2 : próba zapisu zabezpieczonej property
     */
     
 										//interfejs publiczny
-	window.require          = requireGlobal;
-	window.requirejs        = requireGlobal;			//depreceted ...
-	window.define           = defineGlobal;
-	requireGlobal.config    = configGlobal;
-
-    requireGlobal.runnerBox = createRunnerBox();
-    
-	requireGlobal.toUrl     = toUrl;
-    
-
+	
+	freezProperty(window       , "require"  , requireGlobal    , false, 27);
+	freezProperty(window       , "define"   , defineGlobal     , false, 28);
+	freezProperty(requireGlobal, "config"   , configGlobal     , false, 29);
+	freezProperty(requireGlobal, "runnerBox", createRunnerBox(), false, 30);
+	
+										//depreceted
+	freezProperty(window       , "requirejs", requireGlobal    , true , 31);
+	freezProperty(requireGlobal, "toUrl"    , toUrl            , true , 32);
+	freezProperty(requireGlobal, "version"  , "99999"          , true , 33);
+	freezProperty(defineGlobal , "amd"      , {}               , true , 34);
+	freezProperty(requireGlobal, "isBrowser", true             , true , 35);
+	
+	
+	
 	var modulesList    = createModuleList();	//mapa z modułami (oraz zależnościami)
 	var scriptLoader   = null;					//obiekt którym ładujemy pliki (tworzony po podaiu mapy z konfiguracją)
     
@@ -81,6 +102,46 @@
         }
     }
     
+	
+	function freezProperty(obj, prop, value, isDepreceted, errorCode, errorCaption) {
+		
+		try {
+			
+			defProp(false);
+		
+		} catch (e1) {
+
+			try {
+			
+				defProp(true);
+			
+			} catch (e2) {
+				
+				obj[prop] = value;
+			}
+		}
+		
+		function defProp(isConfigurable) {
+			
+			Object.defineProperty(obj, prop, {
+				
+				get: function() {
+					
+					if (isDepreceted === true) {
+						showWarning(errorCode + "->1", errorCaption);
+					}
+					
+					return value;
+				
+				}, set: function(/*val*/) {
+					
+					errorNumber(errorCode + "->2", errorCaption);
+				
+				}, configurable : isConfigurable
+			});
+		}
+	}
+	
     
     function toUrl(url) {
         
