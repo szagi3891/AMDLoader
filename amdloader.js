@@ -28,8 +28,7 @@
 	24 : requireGlobal - nieprawidłowe parametry wejściowe
 	25 : defineGlobal  - nieprawidłowe parametry wejściowe
 		->1 : drugi argument powinien być funkcją
-		->2 : spodziewano sie niepustej tablicy
-		->3 : spodziewano się tablicy
+		->2 : spodziewano się tablicy
 	
 	26 : spodziewano się niepustego stringa na wejściu funkcji toUrl
 
@@ -52,22 +51,26 @@
     
 										//interfejs publiczny
 	
-	freezProperty(window       , "require"  , requireGlobal    , false, 27);
-	freezProperty(window       , "define"   , defineGlobal     , false, 28);
-	freezProperty(requireGlobal, "config"   , configGlobal     , false, 29);
-	freezProperty(requireGlobal, "runnerBox", createRunnerBox(), false, 30);
+	freezProperty(window       , "require"  , requireGlobal                 , false, 27);
+	freezProperty(window       , "define"   , defineGlobal                  , false, 28);
+	freezProperty(requireGlobal, "config"   , configGlobal                  , false, 29);
+	freezProperty(requireGlobal, "runnerBox", createRunnerBox(requireGlobal), false, 30);
 	
 										//depreceted
-	freezProperty(window       , "requirejs", requireGlobal    , true , 31);
-	freezProperty(requireGlobal, "toUrl"    , toUrl            , true , 32);
-	freezProperty(requireGlobal, "version"  , "99999"          , true , 33);
-	freezProperty(defineGlobal , "amd"      , {}               , true , 34);
-	freezProperty(requireGlobal, "isBrowser", true             , true , 35);
+	freezProperty(window       , "requirejs", requireGlobal, true , 31);
+	freezProperty(requireGlobal, "toUrl"    , toUrl        , true , 32);
+	freezProperty(requireGlobal, "version"  , "99999"      , true , 33);
+	freezProperty(defineGlobal , "amd"      , {}           , true , 34);
+	freezProperty(requireGlobal, "isBrowser", true         , true , 35);
 	
 	
 	
 	var modulesList    = createModuleList();	//mapa z modułami (oraz zależnościami)
 	var scriptLoader   = null;					//obiekt którym ładujemy pliki (tworzony po podaiu mapy z konfiguracją)
+    
+    
+                                                //uruchomienie startera
+    createStarter(requireGlobal);
     
     
     function errorNumber(num, caption) {
@@ -233,50 +236,76 @@
 
 		} else {
 			
-			if (isValidParams(deps, callback, 24, true)) {
-				modulesList.requireModules(deps, callback);
+			if (isValidParams(deps, callback, 24.1)) {
+                
+                if (deps.length > 0) {
+                
+                    modulesList.requireModules(deps, callback);
+                
+                } else {
+                    
+                    errorNumber(24.2);
+                }
 			}
 		}
 	}
 	
-	function defineGlobal(deps, moduleDefine) {
+	function defineGlobal(deps, moduleDefine, thirdArgs) {
 
 		if (scriptLoader === null) {
 			
             showWarning(4);
 		
 		} else {
-			
-			if (isValidParams(deps, moduleDefine, 25, false)) {
-				modulesList.define(deps, moduleDefine);
-			}
+            
+			if (arguments.length === 1) {
+                
+                if (isValidParams([], deps, "25.1")) {
+                    modulesList.define([], deps);
+                }
+            
+            } else if (arguments.length === 2) {
+                
+                if (isValidParams(deps, moduleDefine, "25.2")) {
+                    modulesList.define(deps, moduleDefine);
+                }
+            
+            } else if (arguments.length === 3) {
+                
+                if (isNoEmptyString(deps)) {
+                    showWarning("25.4", deps);
+                } else {
+                    showWarning("25.4");
+                }
+                
+                if (isValidParams(moduleDefine, thirdArgs, "25.4")) {
+                    modulesList.define(moduleDefine, thirdArgs);
+                }
+                
+            } else {
+                
+                errorNumber("25.5");
+            }
 		}
 	}
 	
-	function isValidParams(deps, callback, code, checkNoEmptyDeps) {
+	function isValidParams(deps, callback, code) {
 
 		if (isArray(deps)) {
 
-			if (checkNoEmptyDeps === false || deps.length > 0) {
+            if (typeof(callback) === "function") {
 
-				if (typeof(callback) === "function") {
+                //ok
+                return true;
 
-					//ok
-					return true;
+            } else {
 
-				} else {
-					
-					errorNumber(code + "->1");		//, prop
-				}
-
-			} else {
-
-				errorNumber(code + "->2");
-			}
+                errorNumber(code + "->1");		//, prop
+            }
 
 		} else {
 
-			errorNumber(code + "->3");
+			errorNumber(code + "->2");
 		}
 		
 		return false;
@@ -962,7 +991,7 @@
         }
     }
 
-    function createRunnerBox(){
+    function createRunnerBox(require){
 
 
         var moduleHelper    = createModuleHelper();
@@ -1242,218 +1271,213 @@
 
     }
     
-}());
 
 
-                            //amd module starter
+                                //amd module starter
 
-(function(){
+    function createStarter(require){
 
-    var JSONParse = createJSONParser();
+        var JSONParse = createJSONParser();
 
-    var scriptList = document.getElementsByTagName('script');
+        var scriptList = document.getElementsByTagName('script');
 
-    for (var i=0; i<scriptList.length; i++) {
+        for (var i=0; i<scriptList.length; i++) {
 
-        if (runRequire(scriptList[i]) === true) {
-            return;
-        }
-    }
-    
-    function runRequire(node) {
-
-        var map = node.getAttribute("data-static-amd-map");
-
-        if (typeof(map) === "string" && map !== "") {
-
-            var mapAmd = JSONParse(map);
-
-            runRequireMap(mapAmd, getListPreLoad(), getTimeoutStart(), getCrossorigin());
-            
-            return true;
-        }
-        
-        function getListPreLoad() {
-
-            var list = node.getAttribute("data-amd-preload");
-            
-            if (isNoEmptyString(list)) {
-                return list.split(",");
-            } else {
-                return [];
+            if (runRequire(scriptList[i]) === true) {
+                return;
             }
         }
-        
-        function getTimeoutStart() {
 
-            var timeoutStart = node.getAttribute("data-timeout-start");
-            
-            if (isInt(timeoutStart) && timeoutStart > 0) {
-                return timeoutStart;
-            } else {
-                return 2000;
+        function runRequire(node) {
+
+            var map = node.getAttribute("data-static-amd-map");
+
+            if (typeof(map) === "string" && map !== "") {
+
+                var mapAmd = JSONParse(map);
+
+                runRequireMap(mapAmd, getListPreLoad(), getTimeoutStart(), getCrossorigin());
+
+                return true;
+            }
+
+            function getListPreLoad() {
+
+                var list = node.getAttribute("data-amd-preload");
+
+                if (isNoEmptyString(list)) {
+                    return list.split(",");
+                } else {
+                    return [];
+                }
+            }
+
+            function getTimeoutStart() {
+
+                var timeoutStart = node.getAttribute("data-timeout-start");
+
+                if (isInt(timeoutStart) && timeoutStart > 0) {
+                    return timeoutStart;
+                } else {
+                    return 2000;
+                }
+            }
+
+            function getCrossorigin() {
+
+                var value = node.getAttribute("data-crossorigin");
+
+                if (isNoEmptyString(value)) {
+                    return value.split(",");
+                } else {
+                    return [];
+                }
+            }
+
+            function isInt(value){
+
+                return (typeof(value) === 'number' && !isNaN(value) && (value === (value | 0)));
             }
         }
-        
-        function getCrossorigin() {
-            
-            var value = node.getAttribute("data-crossorigin");
-            
-            if (isNoEmptyString(value)) {
-                return value.split(",");
-            } else {
-                return [];
-            }
-        }
-        
-        function isInt(value){
-            
-            return (typeof(value) === 'number' && !isNaN(value) && (value === (value | 0)));
-        }
-    }
 
-    function runRequireMap(pathConfig, listPreload, timeoutStart, listCrossorigin){
-        
-        var runMain = onlyOnce(function(){
-            setTimeout(main, 0);
-        });
-        
-        addEvent(window, "load", runMain);
-        addTimeoutAfterDocumentReady(runMain, timeoutStart);        //timeout, po document.ContentLoad który odpala uruchamianie
-        
-        function main() {
+        function runRequireMap(pathConfig, listPreload, timeoutStart, listCrossorigin){
 
-            require.config({
-                paths: pathConfig,
-                crossorigin: listCrossorigin
+            var runMain = onlyOnce(function(){
+                setTimeout(main, 0);
             });
-            
-            if (listPreload.length > 0) {
-				require(listPreload, function(){});
-            }
-            
-            require.runnerBox.runElement(document);
-        }
-    }
-    
-    
-    function onlyOnce(func) {
 
-        var isExec = false;
+            addEvent(window, "load", runMain);
+            addTimeoutAfterDocumentReady(runMain, timeoutStart);        //timeout, po document.ContentLoad który odpala uruchamianie
 
-        return function(){
+            function main() {
 
-            if (isExec === false) {
+                require.config({
+                    paths: pathConfig,
+                    crossorigin: listCrossorigin
+                });
 
-                isExec = true;
+                if (listPreload.length > 0) {
+                    require(listPreload, function(){});
+                }
 
-                func();
-            }
-        };
-    }
-    
-    function addTimeoutAfterDocumentReady(runFunc, time) {
-
-        var isTimeoutRun = false;
-
-        if (isReady())
-            runTimeout();
-
-        addEvent(document, 'DOMContentLoaded', runTimeout);
-        addEvent(document, 'readystatechange', function(){
-
-            if (isReady())
-                runTimeout();
-        });
-
-        function runTimeout() {
-
-            if (isTimeoutRun === false) {
-
-                isTimeoutRun = true;
-                setTimeout(runFunc, time);
+                require.runnerBox.runElement(document);
             }
         }
 
-        function isReady() {
 
-            return (document.readyState === "complete" || document.readyState === "loaded");
-        }
-    }
-    
-    
-    function createJSONParser(){
+        function onlyOnce(func) {
 
-        if (typeof(JSON) !== "undefined" && typeof(JSON.parse) === "function") {
+            var isExec = false;
 
-            return function() {
+            return function(){
 
-                return JSON.parse.apply(JSON, arguments);
+                if (isExec === false) {
+
+                    isExec = true;
+
+                    func();
+                }
             };
         }
 
-        return function(data) {
+        function addTimeoutAfterDocumentReady(runFunc, time) {
 
-            var rvalidtokens = /(,)|(\[|{)|(}|])|"(?:[^"\\\r\n]|\\["\\\/bfnrt]|\\u[\da-fA-F]{4})*"\s*:?|true|false|null|-?(?!0\d)\d+(?:\.\d+|)(?:[eE][+-]?\d+|)/g;
+            var isTimeoutRun = false;
 
-            var requireNonComma,
-                depth = null,
-                str = trim( data + "" );
+            if (isReady())
+                runTimeout();
 
-            return str && !trim(str.replace(rvalidtokens, function(token, comma, open, close) {
+            addEvent(document, 'DOMContentLoaded', runTimeout);
+            addEvent(document, 'readystatechange', function(){
 
-                if (requireNonComma && comma) {
-                    depth = 0;
+                if (isReady())
+                    runTimeout();
+            });
+
+            function runTimeout() {
+
+                if (isTimeoutRun === false) {
+
+                    isTimeoutRun = true;
+                    setTimeout(runFunc, time);
                 }
+            }
 
-                if (depth === 0) {
-                    return token;
-                }
+            function isReady() {
 
-                requireNonComma = open || comma;
+                return (document.readyState === "complete" || document.readyState === "loaded");
+            }
+        }
 
-                depth += !close - !open;
 
-                return "";
-            })) ?
-                (Function("return " + str))() :
-                null;
-        };
-    }
+        function createJSONParser(){
 
-    function trim(text) {
+            if (typeof(JSON) !== "undefined" && typeof(JSON.parse) === "function") {
 
-        var rtrim = /^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g;
+                return function() {
 
-        if (typeof(text.trim) === "function") {
+                    return JSON.parse.apply(JSON, arguments);
+                };
+            }
 
-            return text.trim();
+            return function(data) {
 
-        } else {
+                var rvalidtokens = /(,)|(\[|{)|(}|])|"(?:[^"\\\r\n]|\\["\\\/bfnrt]|\\u[\da-fA-F]{4})*"\s*:?|true|false|null|-?(?!0\d)\d+(?:\.\d+|)(?:[eE][+-]?\d+|)/g;
 
-            return text === null ? "" : (text + "").replace(rtrim, "");
+                var requireNonComma,
+                    depth = null,
+                    str = trim( data + "" );
+
+                return str && !trim(str.replace(rvalidtokens, function(token, comma, open, close) {
+
+                    if (requireNonComma && comma) {
+                        depth = 0;
+                    }
+
+                    if (depth === 0) {
+                        return token;
+                    }
+
+                    requireNonComma = open || comma;
+
+                    depth += !close - !open;
+
+                    return "";
+                })) ?
+                    (Function("return " + str))() :
+                    null;
+            };
+        }
+
+        function trim(text) {
+
+            var rtrim = /^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g;
+
+            if (typeof(text.trim) === "function") {
+
+                return text.trim();
+
+            } else {
+
+                return text === null ? "" : (text + "").replace(rtrim, "");
+            }
+        }
+
+
+        function addEvent(element, event, callback) {
+
+            if (element.addEventListener) {
+                element.addEventListener(event, callback, false);
+
+            } else if (element.attachEvent) {
+                element.attachEvent('on' + event, callback);
+
+            } else {
+                throw Error('jsstarter -> addEvent -> nieprawidlowe odgalezienie');
+            }
         }
     }
-
     
-    function addEvent(element, event, callback) {
-
-        if (element.addEventListener) {
-            element.addEventListener(event, callback, false);
-        
-        } else if (element.attachEvent) {
-            element.attachEvent('on' + event, callback);
-        
-        } else {
-            throw Error('jsstarter -> addEvent -> nieprawidlowe odgalezienie');
-        }
-    }
-    
-    function isNoEmptyString(value) {
-        
-        return (typeof(value) === "string" && value !== "");
-    }
-
 }());
 
 
