@@ -1356,16 +1356,6 @@
 		}
 		
 		function toRunnable(element) {
-            
-			if (element.tagName === "BODY") {
-				/*
-				console.group("test");
-				console.log(element, "element");
-				console.log(hasClassRunnable(element));
-				console.log(getObject(element).isRun());
-				console.groupEnd();
-				*/
-			}
 			
             return (hasClassRunnable(element) && getObject(element).isRun() === false);
         }
