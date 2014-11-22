@@ -1,16 +1,4 @@
 
-TODO - zrobić zabezpieczenie na poprawność parametrów wejściowych
-    define(["uststd"], function(uststd){
-            --- źle działa ...."uststd/uststd"
-			
-dać możliwość doczytywania adresów :
-http://
-https://
-//
-
-
-
-
 
 zmienić w amdLoaderze sposób oznaczania tego że dany moduł był uruchomiony (nie można usuwać atrybutów data-ran-module) ze względu na kesz google.
     
@@ -32,12 +20,6 @@ i zamiast evaluować, zwracać właśnie tą wartość.
 
 mamy niepotrzebne przekłamanie że się moduł załadował, mimo że się nie załadował
 
-
-
-
-
-na początku biblioteki trzeba zamrozić symbol require, oraz define
-po to żeby inne skrypty nie nadpisały tych symbolów
 
 
 

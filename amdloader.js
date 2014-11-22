@@ -610,23 +610,11 @@
                         
                         if (list[actualLoadingPath].isDefine() === false) {
                             
-                            /*
-                            if (typeof(console) !== "undefined" && typeof(console.warn)) {
-                                console.warn("It is not correct module AMD: ", actualLoadingPath);
-                            }
-                            */
-                                                                                    //dla doczytywanych plików które
-                                                                                    //nie są poprawnym modułem amd
+													//dla doczytywanych plików które nie robią define na końcu pliku
                             list[actualLoadingPath].setDefine([], function(){
-
-                                //console.info("Tworz<ea> pusty modul : " + actualLoadingPath);
-                            });
+								return undefined;
+							});
                         }
-                        
-                        //console.info("Przekazuję pustą definicję: " + actualLoadingPath);
-
-                                                                                                            //pierwotnie
-                        //throwError("pushDefine - waiting list is empty: " + actualLoadingPath);
                     }
                 }
                 
