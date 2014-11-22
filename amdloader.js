@@ -49,6 +49,11 @@
 	
 		->1 : odczyt zdeprecjonowanej property
 		->2 : próba zapisu zabezpieczonej property
+	
+	41 : zdublowane uruchomienie kolejki callbacków
+	42 : zdublowane przypisane do obiektu
+	43 : próba uruchomienia require.runnerBox.whenRun na elemencie który nie jest modułem
+	44 : setAsRun - nieprawidłowy stan
     */
 	
 	
@@ -118,11 +123,15 @@
 		
 		function push(type, num, caption) {
 			
-			list.push({
+			var record = {
 				type    : "warn",
 				num     : num,
 				caption : caption
-			});
+			};
+			
+			list.push(record);
+			
+			//console.warn(record);
 		}
 		
 		function getLogs() {
@@ -660,7 +669,7 @@
     }
     
     function createModule(nameModule) {
-
+		
         var isInit        = false;
         
         var depsNamesSave = null;
@@ -715,6 +724,7 @@
                         return;
                     }
                     
+					
                     waiting.exec([evalValue]);
                 });
 
@@ -1029,71 +1039,158 @@
 
     function createRunnerBox(require){
 
-
-        var moduleHelper    = createModuleHelper();
+		var attrNameToRun   = "data-run-module";
         var propStorageName = 'runnerBoxElementProp' + ((new Date()).getTime());
-
-
+		
+		
         return {
             "runElement"  : runElement,
             "whenRun"     : whenRun
         };
-
-
-        function bindEval(item, evalValue) {
-
-            item[propStorageName] = evalValue;        
+		
+		
+        function getObject(item) {
+			
+			if (propStorageName in item) {
+				//ok
+			} else {
+				item[propStorageName] = createMapper();
+			}
+			
+			return item[propStorageName];
         }
+				
+		function createEventHard() {
+
+			var isReady  = false;
+			var callback = [];
+
+			return {
+				on : on,
+				exec : exec
+			};
+
+			function refresh() {
+				if (isReady === true) {
+					while (callback.length > 0) {
+						runCallback(callback.shift());
+					}
+				}
+			}
+
+			function runCallback(callback) {
+				setTimeout(callback, 0);
+			}
+
+			function exec() {
+				if (isReady === false) {
+					isReady = true;
+					refresh();
+				} else {
+					logs.error(41);
+					refresh();
+				}
+			}
+
+			function on(newCallback) {
+				callback.push(newCallback);
+				refresh();
+			}
+		}
+
+		function createMapper() {
+
+			var isRunFlag = false;
+			var value     = null;
+			var event     = createEventHard();
+			
+			return {
+				onReady  : onReady,
+				setAsRun : setAsRun,
+				setValue : setValue,
+				isRun    : isRun
+			};
+			
+			function isRun() {
+				return isRunFlag;
+			}
+			
+			function onReady(callback) {
+				event.on(function(){
+					callback(value);
+				});
+			}
+			
+			function setAsRun() {
+				
+				if (isRunFlag === false) {
+					isRunFlag = true;
+				} else {
+					logs.error(44);
+				}
+			}
+			
+			function setValue(newValue) {
+
+				if (isRunFlag === true) {
+					
+					value     = newValue;
+					event.exec();
+				
+				} else {
+					logs.error(42);
+				}
+			}
+		}
+		
+		function runElement(domElementToRun) {
+
+			
+			var list = findFromDocument(domElementToRun);
+			
+			
+			forEachRun(list, function(item){
+				
+				
+				var widgetName = getRunModuleName(item);
 
 
-        function getEvalValue(item) {
+				var part = widgetName.split(".");
 
-            return item[propStorageName];
-        }
-
-
-        function runElement(domElementToRun) {
-            
-            var list = findFromDocument(domElementToRun);
-
-            forEachRun(list, function(item){
-                
-                var widgetName = moduleHelper.getRunModuleName(item);
-
-                if (widgetName === null) {
-
-                    return;
-                    //throw Error("Brak zdefiniowanej nazwy widgetu do uruchomienia");
-                }
+				if (part.length !== 2) {
+					throw Error("Nieprawidłowy format uruchamianego modułu: " + widgetName);
+				}
+								
+				
+				var moduleName   = part[0];
+				var moduleMethod = part[1];
 
 
-                var part = widgetName.split(".");
+				require([moduleName], function(module){
+					
+					if (toRunnable(item) === true) {
+						
+						if (module && typeof(module[moduleMethod]) === "function") {
+							
+							getObject(item).setAsRun();
+							
+							var modEval = module[moduleMethod](item);
+							
+							getObject(item).setValue(modEval);
+							
+							item.setAttribute(attrNameToRun + "-isrun", "1");
 
-                if (part.length !== 2) {
-                    throw Error("Nieprawidłowy format uruchamianego modułu: " + widgetName);
-                }
+						} else {
 
-                var moduleName   = part[0];
-                var moduleMethod = part[1];
+							throw Error("Brak zdefiniowanej funkcji \"" + moduleMethod + "\" dla : " + moduleName);
+						}
+					}
+				});
 
-
-                require([moduleName], function(module){
-
-                    if (module && typeof(module[moduleMethod]) === "function") {
-
-                        var modEval = module[moduleMethod](item);
-
-                        bindEval(item, modEval);
-
-                    } else {
-
-                        throw Error("Brak zdefiniowanej funkcji \"" + moduleMethod + "\" dla : " + moduleName);
-                    }
-                });
-            });
-        }
-
-
+			});
+		}
+		
+		
         function forEachRun(list, callback) {
                                                     //utwórz kopię
             var copy = [];
@@ -1114,55 +1211,56 @@
                 }, 0);
             }
         }
-
-        function findFromDocument(elementSearch) {
-
-            var listWidgetsRun = elementFindAll(elementSearch, moduleHelper.getSelector(), moduleHelper.getAttributeName());
-
+		
+		function findFromDocument(elementSearch) {
+            
+            var listWidgetsRun = elementFindAll(elementSearch, "*[" + attrNameToRun + "]", attrNameToRun);
+            
             var result = [];
             var item   = null;
-
+			
             for (var i=0; i<listWidgetsRun.length; i++) {
 
                 item = listWidgetsRun[i];
 
-                if (isIgnore(item) === false) {
+                if (isAddToExec(item) === true) {
                     result.push(item);
                 }
             }
-
+            
             return result;
-
-            function isIgnore(elementTest) {
+            
+            
+            function isAddToExec(elementTest) {
 
                 var countRecursion = 0;
 
-                return isIgnoreInner(elementTest.parentNode);
+                return isAddToExecInner(elementTest.parentNode);
 
-                function isIgnoreInner(element) {
+                function isAddToExecInner(element) {
 
                     countRecursion++;
 
                     if (countRecursion > 200) {
                         recursionError();
-                        return false;
-                    }
-
-                    if (moduleHelper.hasClassRunnable(element)) {
                         return true;
+                    }
+                    
+                    if (toRunnable(element) === true) {
+                        return false;
                     }
 
                     if (element.tagName === "HTML") {
-                        return false;
+                        return true;
                     }
 
                     if (element.parentNode) {
-                        return isIgnoreInner(element.parentNode);
+                        return isAddToExecInner(element.parentNode);
                     }
 
-                    return false;
+                    return true;
                 }
-
+                
                 function recursionError() {
 
                     var error = Error("Too much recursion");
@@ -1173,7 +1271,7 @@
                 }
             }
         }
-
+		
         function elementFindAll(element, selector, attribute) {
 
             if (element === document) {
@@ -1239,76 +1337,51 @@
         }
 
         function whenRun(element, callback) {
-
-            var interval = setInterval(check, 1000);
-
-            check();
-
-            function check() {
-
-                if (interval === null) {
-                    return;
-                }
-
-                                                                    //jeśli element jest uruchomiony
-                if (moduleHelper.hasClassRunnable(element) === false) {
-
-                    clearInterval(interval);
-                    interval = null;
-
-                    callback(getEvalValue(element));
-                }
-            }
+			
+			if (hasClassRunnable(element)) {
+				
+				getObject(element).onReady(callback);
+			
+			} else {
+			
+				logs.error(43);
+			}
         }
-
-
-        function createModuleHelper(){
-
-            var attrName = "data-run-module";
-
-            return {
-                getRunModuleName : getRunModuleName,
-                getSelector      : getSelector,
-                hasClassRunnable : hasClassRunnable,
-                getAttributeName : getAttributeName
-            };
-
-            function getAttributeName() {
-                return attrName;
-            }
-
-            function getRunModuleName(item) {
-
-                var widgetName = item.getAttribute(attrName);
-
-                if (typeof(widgetName) === "string" && widgetName !== "") {
-
-                    item.removeAttribute(attrName);
-                    item.setAttribute("data-module-is-run", widgetName);      //oznaczenie że uruchomiony
-
-                    return widgetName;
-                }
-
-                return null;
-            }
-
-            function hasClassRunnable(element) {
-
-                var value = element.getAttribute(attrName);
-
-                return (typeof(value) === "string" && value !== "");
-            }
-
-            function getSelector() {
-
-                return "*[" + attrName + "]";
-            }
+		
+		function hasClassRunnable(element) {
+			
+            var value = element.getAttribute(attrNameToRun);
+            
+            return (typeof(value) === "string" && value !== "");
+		}
+		
+		function toRunnable(element) {
+            
+			if (element.tagName === "BODY") {
+				/*
+				console.group("test");
+				console.log(element, "element");
+				console.log(hasClassRunnable(element));
+				console.log(getObject(element).isRun());
+				console.groupEnd();
+				*/
+			}
+			
+            return (hasClassRunnable(element) && getObject(element).isRun() === false);
         }
-
+		
+        function getRunModuleName(item) {
+            
+            var widgetName = item.getAttribute(attrNameToRun);
+			
+            if (typeof(widgetName) === "string" && widgetName !== "") {
+                
+                return widgetName;
+            }
+            
+            return null;
+        }
     }
-    
-
-
                                 //amd module starter
 
     function createStarter(require){

@@ -1,4 +1,12 @@
 
+zmienić wyszukiwanie modułu, żeby dało się wskazać mocno zagnieżdżoną funkcję ...
+				w funkcji : createRunnerBox -> runElement - tam gdzie jest parsowanie : var part = widgetName.split(".");
+				//console.warn("TODO");
+				//znaki alfanumeryczne oraz cyfry - trzeba sprawdzic jakie sa dozwolone nazwy funkcji
+				//akceptowalny format to (^(cos/dsdds(/dasdsadsa))\.(dsddsd(\.dsdsds))*$)
+
+
+
 
 zmienić w amdLoaderze sposób oznaczania tego że dany moduł był uruchomiony (nie można usuwać atrybutów data-ran-module)
 
