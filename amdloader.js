@@ -746,7 +746,7 @@
 				
 				return path;
 			
-			} else if (path.substr(0, 3) === "://") {
+			} else if (path.substr(0, 2) === "//") {
 				
 				return path;
 			
