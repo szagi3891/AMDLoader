@@ -730,7 +730,7 @@
         
         
         
-        function resolvePath(path) {
+        function resolvePath(path, extension) {
             
             if (path.length > 0 && path[0] === ".") {
                 
@@ -738,25 +738,41 @@
                 return;
             }
             
-            for (var alias in configPath) {
-                                                        //alias na samym początku musi się znajdować
-                if (path.indexOf(alias + "/") === 0) {
-                    
-                    var newPath = path.replace(alias, configPath[alias]);
-                        
-                    if (path !== newPath) {
-                        
-                        return newPath;
-                    
-                    } else {
-                        
-                        errorNumber(17, path);
-                        return;
-                    }
-                }
-            }
-            
-            errorNumber(18, path);
+			if (path.substr(0, 8) === "https://") {
+				
+				return path;
+				
+			} else if (path.substr(0, 7) === "http://") {
+				
+				return path;
+			
+			} else if (path.substr(0, 3) === "://") {
+				
+				return path;
+			
+															//path typu platforma/zasob
+			} else if (path.indexOf("/") >= 0) {
+			
+				for (var alias in configPath) {
+															//alias na samym początku musi się znajdować
+					if (path.indexOf(alias + "/") === 0) {
+
+						var newPath = path.replace(alias, configPath[alias]);
+
+						if (path !== newPath) {
+
+							return newPath + "." + extension;
+
+						} else {
+
+							errorNumber(17, path);
+							return;
+						}
+					}
+				}
+			}
+				
+            errorNumber(18, path);	
         }
         
         
@@ -776,11 +792,9 @@
         
 		function load(path, callback) {
             
-            var fullPath = resolvePath(path);
+            var fullPath = resolvePath(path, "js");
             
             if (isNoEmptyString(fullPath)) {
-                
-                fullPath = fullPath + ".js";
                  
                 if (fullPath in loadingScriprs) {
 
