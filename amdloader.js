@@ -12,7 +12,8 @@
     9  : "requireModulesWithModuleBase, pierwszy parametr powinien być niepustym stringiem: "
     10 : "requireModules: powtórzona nazwa modułu: "
     11 : "requireModules: wielokrotne wywołanie funkcji zwrotnej: "
-    12 : "wykryto zależności kołowe w module: "
+    12.1 : "wykryto zależności kołowe w module: "
+	12.2 : "doczytany moduł nie wywołał funkcji define"
     13 : "pushDefine - not defined: "
     14 :  "Błąd przy evaluacji modułu: " + nameModule
     15 : "createModule: setDefine: moduł był już zainicjowany -> " + nameModule
@@ -37,17 +38,24 @@
 	28 : błędy związane z property window.define
 	29 : błędy związane z property require.config
 	30 : błędy związane z property require.runnerBox
+	31 : błedy zwiazane z property require.getLogs
 	
 								zdeprecjonowane properties
-	31 : błędy związane z property window.requirejs
-	32 : błędy związane z property window.require.toUrl
-	33 : błędy związane z property window.require.version
-	34 : błędy związane z property window.define.amd
-	35 : błędy związane z property window.require.isBrowser
+	32 : błędy związane z property window.requirejs
+	33 : błędy związane z property window.require.toUrl
+	34 : błędy związane z property window.require.version
+	35 : błędy związane z property window.define.amd
+	36 : błędy związane z property window.require.isBrowser
 	
 		->1 : odczyt zdeprecjonowanej property
 		->2 : próba zapisu zabezpieczonej property
     */
+	
+	
+	var modulesList    = createModuleList();	//mapa z modułami (oraz zależnościami)
+	var scriptLoader   = null;					//obiekt którym ładujemy pliki (tworzony po podaiu mapy z konfiguracją)
+	var logs           = createLogs();			//logi
+	
     
 										//interfejs publiczny
 	
@@ -55,55 +63,79 @@
 	freezProperty(window       , "define"   , defineGlobal                  , false, 28);
 	freezProperty(requireGlobal, "config"   , configGlobal                  , false, 29);
 	freezProperty(requireGlobal, "runnerBox", createRunnerBox(requireGlobal), false, 30);
+	freezProperty(requireGlobal, "getLogs"  , logs.getLogs                  , false, 31);
 	
 										//depreceted
-	freezProperty(window       , "requirejs", requireGlobal, true , 31);
-	freezProperty(requireGlobal, "toUrl"    , toUrl        , true , 32);
-	freezProperty(requireGlobal, "version"  , "99999"      , true , 33);
-	freezProperty(defineGlobal , "amd"      , {}           , true , 34);
-	freezProperty(requireGlobal, "isBrowser", true         , true , 35);
+	freezProperty(window       , "requirejs", requireGlobal, true , 32);
+	freezProperty(requireGlobal, "toUrl"    , toUrl        , true , 33);
+	freezProperty(requireGlobal, "version"  , "99999"      , true , 34);
+	freezProperty(defineGlobal , "amd"      , {}           , true , 35);
+	freezProperty(requireGlobal, "isBrowser", true         , true , 36);
 	
 	
-	
-	var modulesList    = createModuleList();	//mapa z modułami (oraz zależnościami)
-	var scriptLoader   = null;					//obiekt którym ładujemy pliki (tworzony po podaiu mapy z konfiguracją)
-    
-    
-                                                //uruchomienie startera
+												//uruchomienie startera
     createStarter(requireGlobal);
     
-    
-    function errorNumber(num, caption) {
-        
-        var messFormat = "amdLoader: errorNumber: " + num;
-        
-        if (typeof(caption) === "string" && caption !== "") {
-            messFormat += ": " + caption;
-        }
-        
-		var err = Error(messFormat );
-        
-		setTimeout(throwErr, 0);
-
-		function throwErr(){
-			throw err;
+	
+	
+	function createLogs() {
+		
+		var list = [];
+		
+		return {
+			error   : error,
+			warn    : warn,
+			getLogs : getLogs
+		};
+		
+		function error(num, caption) {
+			
+			push("err", num, caption);
+			throwError(num, caption);
 		}
-    }
-    
-    
-    function showWarning(num, caption) {
-        
-        if (typeof(console) !== "undefined" && typeof(console.warn) === "function") {
-            
-            var messFormat = "amdLoader: errorNumber: " + num;
-            
-            if (typeof(caption) === "string" && caption !== "") {
-                messFormat += ": " + caption;
-            }
-            
-            console.warn(messFormat);
-        }
-    }
+		
+		function warn(num, caption) {
+			
+			push("warn", num, caption);
+		}
+		
+		function throwError(num, caption) {
+
+			var messFormat = "amdLoader: errorNumber: " + num;
+			
+			if (typeof(caption) === "string" && caption !== "") {
+				messFormat += ": " + caption;
+			}
+
+			var err = Error(messFormat );
+
+			setTimeout(throwErr, 0);
+
+			function throwErr(){
+				throw err;
+			}
+		}
+		
+		function push(type, num, caption) {
+			
+			list.push({
+				type    : "warn",
+				num     : num,
+				caption : caption
+			});
+		}
+		
+		function getLogs() {
+			
+			var copy = [];
+			
+			for (var i=0; i<list.length; i++) {
+				copy.push(list[i]);
+			}
+			
+			return copy;
+		}
+	}
     
 	
 	function freezProperty(obj, prop, value, isDepreceted, errorCode, errorCaption) {
@@ -131,14 +163,14 @@
 				get: function() {
 					
 					if (isDepreceted === true) {
-						showWarning(errorCode + "->1", errorCaption);
+						logs.warn(errorCode + "->1", errorCaption);
 					}
 					
 					return value;
 				
 				}, set: function(/*val*/) {
 					
-					errorNumber(errorCode + "->2", errorCaption);
+					logs.error(errorCode + "->2", errorCaption);
 				
 				}, configurable : isConfigurable
 			});
@@ -154,7 +186,7 @@
 			
 		} else {
 			
-			errorNumber(26);
+			logs.error(26);
 		}
     }
     
@@ -169,12 +201,12 @@
             
 			} else {
                 
-				errorNumber(1);
+				logs.error(1);
 			}
 
 		} else {
             
-            errorNumber(2);
+            logs.error(2);
 		}
         
                                         //konwertuje na tablicę, która posiada niepuste stringi
@@ -193,7 +225,7 @@
                         
                         if (prop in ret) {
                             
-                            errorNumber(22, prop);
+                            logs.error(22, prop);
                         
                         } else {
                             
@@ -202,7 +234,7 @@
                     
                     } else {
                         
-                        errorNumber(23, prop);
+                        logs.error(23, prop);
                     }
                 }
             }
@@ -232,7 +264,7 @@
 		
 		if (scriptLoader === null) {
             
-            errorNumber(3);
+            logs.error(3);
 
 		} else {
 			
@@ -244,7 +276,7 @@
                 
                 } else {
                     
-                    errorNumber(24.2);
+                    logs.error(24.2);
                 }
 			}
 		}
@@ -254,7 +286,7 @@
 
 		if (scriptLoader === null) {
 			
-            showWarning(4);
+            logs.warn(4);
 		
 		} else {
             
@@ -273,9 +305,9 @@
             } else if (arguments.length === 3) {
                 
                 if (isNoEmptyString(deps)) {
-                    showWarning("25.4", deps);
+                    logs.warn("25.4", deps);
                 } else {
-                    showWarning("25.4");
+                    logs.warn("25.4");
                 }
                 
                 if (isValidParams(moduleDefine, thirdArgs, "25.4")) {
@@ -284,7 +316,7 @@
                 
             } else {
                 
-                errorNumber("25.5");
+                logs.error("25.5");
             }
 		}
 	}
@@ -300,12 +332,12 @@
 
             } else {
 
-                errorNumber(code + "->1");		//, prop
+                logs.error(code + "->1");		//, prop
             }
 
 		} else {
 
-			errorNumber(code + "->2");
+			logs.error(code + "->2");
 		}
 		
 		return false;
@@ -331,7 +363,7 @@
             
             if (chunks.length < 2) {
                 
-                errorNumber(5, path);
+                logs.error(5, path);
                 return;
             }
             
@@ -377,7 +409,7 @@
 
                     } else {
 
-                        errorNumber(6, baseDir + " , " + dirModule + " -> " + outPath);
+                        logs.error(6, baseDir + " , " + dirModule + " -> " + outPath);
                     }
                 
                 } else {
@@ -387,7 +419,7 @@
             
             } else {
                 
-                errorNumber(7, dirModule);
+                logs.error(7, dirModule);
             }
         }
         
@@ -410,7 +442,7 @@
 
                         } else {
                             
-                            errorNumber(8, basePathModule + " -> " + deps[i]);
+                            logs.error(8, basePathModule + " -> " + deps[i]);
                             return;
                         }
                     }
@@ -420,7 +452,7 @@
                 
             } else {
                 
-                errorNumber(9, moduleName);
+                logs.error(9, moduleName);
             }
         }
         
@@ -436,7 +468,7 @@
                 
                 if (depsName in retValue) {
                     
-                    errorNumber(10, depsName);
+                    logs.error(10, depsName);
                     
                 } else {
                     
@@ -460,7 +492,7 @@
                     
                     } else {
                         
-                        errorNumber(11, depsName);
+                        logs.error(11, depsName);
                     }
                 });
             });
@@ -593,7 +625,7 @@
                         
                         if (isCircleDeps(actualLoadingPath, item.deps)) {
                             
-                            errorNumber(12, actualLoadingPath);
+                            logs.error(12.1, actualLoadingPath);
                         
                         } else {
                             
@@ -610,6 +642,8 @@
                         
                         if (list[actualLoadingPath].isDefine() === false) {
                             
+							logs.warn(12.2, actualLoadingPath);
+							
 													//dla doczytywanych plików które nie robią define na końcu pliku
                             list[actualLoadingPath].setDefine([], function(){
 								return undefined;
@@ -620,7 +654,7 @@
                 
             } else {
             
-                errorNumber(13, actualLoadingPath);
+                logs.error(13, actualLoadingPath);
             }
         }
     }
@@ -672,7 +706,7 @@
                     
                     } catch (errEval) {
                         
-                        errorNumber(14, nameModule);
+                        logs.error(14, nameModule);
                         
                         setTimeout(function(){
                             throw errEval;
@@ -686,7 +720,7 @@
 
             } else {
             
-                errorNumber(15, nameModule);
+                logs.error(15, nameModule);
             }
         }
         
@@ -722,7 +756,7 @@
             
             if (path.length > 0 && path[0] === ".") {
                 
-                errorNumber(16, path);
+                logs.error(16, path);
                 return;
             }
             
@@ -753,14 +787,14 @@
 
 						} else {
 
-							errorNumber(17, path);
+							logs.error(17, path);
 							return;
 						}
 					}
 				}
 			}
 				
-            errorNumber(18, path);	
+            logs.error(18, path);	
         }
         
         
@@ -933,12 +967,12 @@
                     
                 } else {
                     
-                    errorNumber(19);
+                    logs.error(19);
                 }
             
             } else {
                 
-                errorNumber(20);
+                logs.error(20);
             }
         }
         
@@ -976,7 +1010,7 @@
                 
             } else {
                 
-                errorNumber(21);
+                logs.error(21);
             }
         }
     }
