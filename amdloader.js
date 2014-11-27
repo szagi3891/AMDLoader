@@ -46,6 +46,7 @@
 	34 : błędy związane z property window.require.version
 	35 : błędy związane z property window.define.amd
 	36 : błędy związane z property window.require.isBrowser
+	37 : błędy związane z property window.require.specified
 	
 		->1 : odczyt zdeprecjonowanej property
 		->2 : próba zapisu zabezpieczonej property
@@ -71,16 +72,21 @@
 	freezProperty(requireGlobal, "getLogs"  , logs.getLogs                  , false, 31);
 	
 										//depreceted
-	freezProperty(window       , "requirejs", requireGlobal, true , 32);
-	freezProperty(requireGlobal, "toUrl"    , toUrl        , true , 33);
-	freezProperty(requireGlobal, "version"  , "99999"      , true , 34);
-	freezProperty(defineGlobal , "amd"      , {}           , true , 35);
-	freezProperty(requireGlobal, "isBrowser", true         , true , 36);
+	freezProperty(window       , "requirejs", requireGlobal   , true , 32);
+	freezProperty(requireGlobal, "toUrl"    , toUrl           , true , 33);
+	freezProperty(requireGlobal, "version"  , "99999"         , true , 34);
+	freezProperty(defineGlobal , "amd"      , {}              , true , 35);
+	freezProperty(requireGlobal, "isBrowser", true            , true , 36);
+	freezProperty(requireGlobal, "specified", globalSpecified , true , 37);
 	
 	
 												//uruchomienie startera
     createStarter(requireGlobal);
     
+	
+	function globalSpecified() {
+		return true;
+	}
 	
 	
 	function createLogs() {
