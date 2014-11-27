@@ -844,6 +844,9 @@
                         script: script,
                         query : queryCallbackSync()
                     };
+                    
+                                            //ze względu na kesze IE.
+                    appendToDom(script);
                 }
 
                 loadingScriprs[path].query.add(callback);
@@ -868,6 +871,12 @@
         }
         
         
+        function appendToDom(script) {
+            
+            document.getElementsByTagName('head')[0].appendChild(script);
+        }
+        
+        
         function loadScript(path, callback) {
             
             var isExec    = false;                    
@@ -885,8 +894,6 @@
             }            
             
             script.onreadystatechange = onreadystatechange;
-            
-            document.getElementsByTagName('head')[0].appendChild(script);
             
             return script;
             
