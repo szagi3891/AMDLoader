@@ -1503,16 +1503,24 @@
 
             var isTimeoutRun = false;
 
-            if (isReady())
+            if (isReady()) {
                 runTimeout();
-
+            }
+            
             addEvent(document, 'DOMContentLoaded', runTimeout);
             addEvent(document, 'readystatechange', function(){
-
-                if (isReady())
+                
+                if (isReady()) {
                     runTimeout();
+                }
             });
-
+            
+            
+            if (isVisibility() === false) {
+                runTimeout();
+            }
+            
+            
             function runTimeout() {
 
                 if (isTimeoutRun === false) {
@@ -1525,6 +1533,49 @@
             function isReady() {
 
                 return (document.readyState === "complete" || document.readyState === "loaded");
+            }    
+            
+            function isVisibility() {
+                
+                var value = getValue();
+                
+                if (value === "hidden" || value === "prerender") {
+                    return false;
+                }
+                
+                return true;
+                
+                function getValue() {
+                    
+                    var keys = [
+                              "visibilityState",
+                           "mozVisibilityState",
+                            "msVisibilityState",
+                             "oVisibilityState",
+                        "webkitVisibilityState"
+                    ];
+                    var prop, i;
+                    
+                    try {
+
+                        for (i = 0; i < keys.length; i++) {
+
+                            prop = keys[i];
+
+                            if (prop in document) {
+                                return document[prop];
+                            }
+                        }
+
+                        return undefined;
+
+                    } catch (e) {
+
+                        return undefined;
+                    }
+                    
+                    return undefined;
+                }
             }
         }
 
@@ -1537,8 +1588,8 @@
 
                     return JSON.parse.apply(JSON, arguments);
                 };
-            }
-
+            }        
+            
             return function(data) {
 
                 var rvalidtokens = /(,)|(\[|{)|(}|])|"(?:[^"\\\r\n]|\\["\\\/bfnrt]|\\u[\da-fA-F]{4})*"\s*:?|true|false|null|-?(?!0\d)\d+(?:\.\d+|)(?:[eE][+-]?\d+|)/g;
