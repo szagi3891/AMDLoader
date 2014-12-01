@@ -7,6 +7,7 @@ import (
     "io/ioutil"
     "unicode/utf8"
     "strconv"
+	"strings"
 )
 
 func main() {
@@ -32,6 +33,7 @@ func main() {
     out := []byte{}
     
     
+												//naprawianie kodowania
 	for len(content) > 0 {
         
 		char, size := utf8.DecodeRune(content)
@@ -51,6 +53,11 @@ func main() {
         content = content[size:]
 	}
     
+	
+												//tab -> 4 spacje
+	out = []byte(strings.Replace(string(out), "\t", "    ", -1))
+	
+	
     
     info, errStat := os.Stat(file)
     

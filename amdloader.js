@@ -13,7 +13,7 @@
     10 : "requireModules: powtórzona nazwa modułu: "
     11 : "requireModules: wielokrotne wywołanie funkcji zwrotnej: "
     12.1 : "wykryto zależności kołowe w module: "
-	12.2 : "doczytany moduł nie wywołał funkcji define"
+    12.2 : "doczytany moduł nie wywołał funkcji define"
     13 : "pushDefine - not defined: "
     14 :  "Błąd przy evaluacji modułu: " + nameModule
     15 : "createModule: setDefine: moduł był już zainicjowany -> " + nameModule
@@ -25,211 +25,211 @@
     21 : "queryCallback: ready -> function expected"
     22 : crosdomain prop - wielokrotnie zdefiniowana
     23 : crosdomain prop - parametr nie jest "niepustym stringiem"
-	
-	24 : requireGlobal - nieprawidłowe parametry wejściowe
-	25 : defineGlobal  - nieprawidłowe parametry wejściowe
-		->1 : drugi argument powinien być funkcją
-		->2 : spodziewano się tablicy
-	
-	26 : spodziewano się niepustego stringa na wejściu funkcji toUrl
-
-								poprawne properties
-	27 : błędy związane z property window.require
-	28 : błędy związane z property window.define
-	29 : błędy związane z property require.config
-	30 : błędy związane z property require.runnerBox
-	31 : błędy związane z property require.runnerBox.runElement
-	32 : błędy związane z property require.runnerBox.whenRun
-	33 : błedy zwiazane z property require.getLogs
-	
-								zdeprecjonowane properties
-	34 : błędy związane z property window.requirejs
-	35 : błędy związane z property window.require.toUrl
-	36 : błędy związane z property window.require.version
-	37 : błędy związane z property window.define.amd
-	38 : błędy związane z property window.require.isBrowser
-	39 : błędy związane z property window.require.specified
-	
-	//40 ...
-	
-		->1 : odczyt zdeprecjonowanej property
-		->2 : próba zapisu zabezpieczonej property
-	
-	41 : zdublowane uruchomienie kolejki callbacków
-	42 : zdublowane przypisane do obiektu
-	43 : próba uruchomienia require.runnerBox.whenRun na elemencie który nie jest modułem
-	44 : setAsRun - nieprawidłowy stan
-    */
-	
-	
-	var modulesList    = createModuleList();	//mapa z modułami (oraz zależnościami)
-	var scriptLoader   = null;					//obiekt którym ładujemy pliki (tworzony po podaiu mapy z konfiguracją)
-	var logs           = createLogs();			//logi
-	
     
-										//interfejs publiczny
-	
-	freezProperty(window                 , "require"   , requireGlobal                     , false, 27);
-	freezProperty(window                 , "define"    , defineGlobal                      , false, 28);
-	freezProperty(requireGlobal          , "config"    , configGlobal                      , false, 29);
-	freezProperty(requireGlobal          , "runnerBox" , createRunnerBox(requireGlobal)    , false, 30);
-	freezProperty(requireGlobal.runnerBox, "runElement", requireGlobal.runnerBox.runElement, false, 31);
-	freezProperty(requireGlobal.runnerBox, "whenRun"   , requireGlobal.runnerBox.whenRun   , false, 32);
-	freezProperty(requireGlobal          , "getLogs"   , logs.getLogs                      , false, 33);
-	
-										//depreceted
-	
-	freezProperty(window                 , "requirejs" , requireGlobal                     , true , 34);
-	freezProperty(requireGlobal          , "toUrl"     , toUrl                             , true , 35);
-	freezProperty(requireGlobal          , "version"   , "2.99999"                         , true , 36);
-	freezProperty(defineGlobal           , "amd"       , {}                                , true , 37);
-	freezProperty(requireGlobal          , "isBrowser" , true                              , true , 38);
-	freezProperty(requireGlobal          , "specified" , globalSpecified                   , true , 39);
-	
-	
-										//uruchomienie startera
+    24 : requireGlobal - nieprawidłowe parametry wejściowe
+    25 : defineGlobal  - nieprawidłowe parametry wejściowe
+        ->1 : drugi argument powinien być funkcją
+        ->2 : spodziewano się tablicy
+    
+    26 : spodziewano się niepustego stringa na wejściu funkcji toUrl
+
+                                poprawne properties
+    27 : błędy związane z property window.require
+    28 : błędy związane z property window.define
+    29 : błędy związane z property require.config
+    30 : błędy związane z property require.runnerBox
+    31 : błędy związane z property require.runnerBox.runElement
+    32 : błędy związane z property require.runnerBox.whenRun
+    33 : błedy zwiazane z property require.getLogs
+    
+                                zdeprecjonowane properties
+    34 : błędy związane z property window.requirejs
+    35 : błędy związane z property window.require.toUrl
+    36 : błędy związane z property window.require.version
+    37 : błędy związane z property window.define.amd
+    38 : błędy związane z property window.require.isBrowser
+    39 : błędy związane z property window.require.specified
+    
+    //40 ...
+    
+        ->1 : odczyt zdeprecjonowanej property
+        ->2 : próba zapisu zabezpieczonej property
+    
+    41 : zdublowane uruchomienie kolejki callbacków
+    42 : zdublowane przypisane do obiektu
+    43 : próba uruchomienia require.runnerBox.whenRun na elemencie który nie jest modułem
+    44 : setAsRun - nieprawidłowy stan
+    */
+    
+    
+    var modulesList    = createModuleList();    //mapa z modułami (oraz zależnościami)
+    var scriptLoader   = null;                    //obiekt którym ładujemy pliki (tworzony po podaiu mapy z konfiguracją)
+    var logs           = createLogs();            //logi
+    
+    
+                                        //interfejs publiczny
+    
+    freezProperty(window                 , "require"   , requireGlobal                     , false, 27);
+    freezProperty(window                 , "define"    , defineGlobal                      , false, 28);
+    freezProperty(requireGlobal          , "config"    , configGlobal                      , false, 29);
+    freezProperty(requireGlobal          , "runnerBox" , createRunnerBox(requireGlobal)    , false, 30);
+    freezProperty(requireGlobal.runnerBox, "runElement", requireGlobal.runnerBox.runElement, false, 31);
+    freezProperty(requireGlobal.runnerBox, "whenRun"   , requireGlobal.runnerBox.whenRun   , false, 32);
+    freezProperty(requireGlobal          , "getLogs"   , logs.getLogs                      , false, 33);
+    
+                                        //depreceted
+    
+    freezProperty(window                 , "requirejs" , requireGlobal                     , true , 34);
+    freezProperty(requireGlobal          , "toUrl"     , toUrl                             , true , 35);
+    freezProperty(requireGlobal          , "version"   , "2.99999"                         , true , 36);
+    freezProperty(defineGlobal           , "amd"       , {}                                , true , 37);
+    freezProperty(requireGlobal          , "isBrowser" , true                              , true , 38);
+    freezProperty(requireGlobal          , "specified" , globalSpecified                   , true , 39);
+    
+    
+                                        //uruchomienie startera
     runStarter(requireGlobal);
     
-	
-	function globalSpecified() {
-		return true;
-	}
-	
-	
-	function createLogs() {
-		
-		var list = [];
-		
-		return {
-			error   : error,
-			warn    : warn,
-			getLogs : getLogs
-		};
-		
-		function error(num, caption) {
-			
-			push("err", num, caption);
-			throwError(num, caption);
-		}
-		
-		function warn(num, caption) {
-			
-			push("warn", num, caption);
-		}
-		
-		function throwError(num, caption) {
-
-			var messFormat = "amdLoader: errorNumber: " + num;
-			
-			if (typeof(caption) === "string" && caption !== "") {
-				messFormat += ": " + caption;
-			}
-
-			var err = Error(messFormat );
-
-			setTimeout(throwErr, 0);
-
-			function throwErr(){
-				throw err;
-			}
-		}
-		
-		function push(type, num, caption) {
-			
-			var record = {
-				type    : "warn",
-				num     : num,
-				caption : caption
-			};
-			
-			list.push(record);
-			
-			//console.warn(record);
-		}
-		
-		function getLogs() {
-			
-			var copy = [];
-			
-			for (var i=0; i<list.length; i++) {
-				copy.push(list[i]);
-			}
-			
-			return copy;
-		}
-	}
     
-	
-	function freezProperty(obj, prop, value, isDepreceted, errorCode, errorCaption) {
-		
-		try {
-			
-			defProp(false);
-		
-		} catch (e1) {
-
-			try {
-			
-				defProp(true);
-			
-			} catch (e2) {
-				
-				obj[prop] = value;
-			}
-		}
-		
-		function defProp(isConfigurable) {
-			
-			Object.defineProperty(obj, prop, {
-				
-				get: function() {
-					
-					if (isDepreceted === true) {
-						logs.warn(errorCode + "->1", errorCaption);
-					}
-					
-					return value;
-				
-				}, set: function(/*val*/) {
-					
-					logs.error(errorCode + "->2", errorCaption);
-				
-				}, configurable : isConfigurable
-			});
-		}
-	}
-	
-    
-    function toUrl(url) {
-        
-		if (isNoEmptyString(url)) {
-			
-			return scriptLoader.resolvePath(url);
-			
-		} else {
-			
-			logs.error(26);
-		}
+    function globalSpecified() {
+        return true;
     }
     
     
-	function configGlobal(conf) {
-
-		if (scriptLoader === null) {
+    function createLogs() {
+        
+        var list = [];
+        
+        return {
+            error   : error,
+            warn    : warn,
+            getLogs : getLogs
+        };
+        
+        function error(num, caption) {
             
-			if (valid(conf.paths)) {
-
-				scriptLoader = createScriptLoader(conf.paths, getMapCrossorigin(conf.crossorigin));
+            push("err", num, caption);
+            throwError(num, caption);
+        }
+        
+        function warn(num, caption) {
             
-			} else {
+            push("warn", num, caption);
+        }
+        
+        function throwError(num, caption) {
+
+            var messFormat = "amdLoader: errorNumber: " + num;
+            
+            if (typeof(caption) === "string" && caption !== "") {
+                messFormat += ": " + caption;
+            }
+
+            var err = Error(messFormat );
+
+            setTimeout(throwErr, 0);
+
+            function throwErr(){
+                throw err;
+            }
+        }
+        
+        function push(type, num, caption) {
+            
+            var record = {
+                type    : "warn",
+                num     : num,
+                caption : caption
+            };
+            
+            list.push(record);
+            
+            //console.warn(record);
+        }
+        
+        function getLogs() {
+            
+            var copy = [];
+            
+            for (var i=0; i<list.length; i++) {
+                copy.push(list[i]);
+            }
+            
+            return copy;
+        }
+    }
+    
+    
+    function freezProperty(obj, prop, value, isDepreceted, errorCode, errorCaption) {
+        
+        try {
+            
+            defProp(false);
+        
+        } catch (e1) {
+
+            try {
+            
+                defProp(true);
+            
+            } catch (e2) {
                 
-				logs.error(1);
-			}
+                obj[prop] = value;
+            }
+        }
+        
+        function defProp(isConfigurable) {
+            
+            Object.defineProperty(obj, prop, {
+                
+                get: function() {
+                    
+                    if (isDepreceted === true) {
+                        logs.warn(errorCode + "->1", errorCaption);
+                    }
+                    
+                    return value;
+                
+                }, set: function(/*val*/) {
+                    
+                    logs.error(errorCode + "->2", errorCaption);
+                
+                }, configurable : isConfigurable
+            });
+        }
+    }
+    
+    
+    function toUrl(url) {
+        
+        if (isNoEmptyString(url)) {
+            
+            return scriptLoader.resolvePath(url);
+            
+        } else {
+            
+            logs.error(26);
+        }
+    }
+    
+    
+    function configGlobal(conf) {
 
-		} else {
+        if (scriptLoader === null) {
+            
+            if (valid(conf.paths)) {
+
+                scriptLoader = createScriptLoader(conf.paths, getMapCrossorigin(conf.crossorigin));
+            
+            } else {
+                
+                logs.error(1);
+            }
+
+        } else {
             
             logs.error(2);
-		}
+        }
         
                                         //konwertuje na tablicę, która posiada niepuste stringi
                                         //(w przypadku innego typu na wejściu pusta tablica)
@@ -265,32 +265,32 @@
         }
         
         
-		function valid(paths) {
+        function valid(paths) {
             
-			var count = 0;
+            var count = 0;
             
-			for (var prop in paths) {
+            for (var prop in paths) {
                 
                 if (isNoEmptyString(paths[prop])) {
-					count++;
-				}
-			}
+                    count++;
+                }
+            }
 
-			if (count > 0) {
-				return true;
-			}
-		}
-	}
+            if (count > 0) {
+                return true;
+            }
+        }
+    }
 
-	function requireGlobal(deps, callback) {
-		
-		if (scriptLoader === null) {
+    function requireGlobal(deps, callback) {
+        
+        if (scriptLoader === null) {
             
             logs.error(3);
 
-		} else {
-			
-			if (isValidParams(deps, callback, 24.1)) {
+        } else {
+            
+            if (isValidParams(deps, callback, 24.1)) {
                 
                 if (deps.length > 0) {
                 
@@ -300,19 +300,19 @@
                     
                     logs.error(24.2);
                 }
-			}
-		}
-	}
-	
-	function defineGlobal(deps, moduleDefine, thirdArgs) {
+            }
+        }
+    }
+    
+    function defineGlobal(deps, moduleDefine, thirdArgs) {
 
-		if (scriptLoader === null) {
-			
-            logs.warn(4);
-		
-		} else {
+        if (scriptLoader === null) {
             
-			if (arguments.length === 1) {
+            logs.warn(4);
+        
+        } else {
+            
+            if (arguments.length === 1) {
                 
                 if (isValidParams([], deps, "25.1")) {
                     modulesList.define([], deps);
@@ -340,12 +340,12 @@
                 
                 logs.error("25.5");
             }
-		}
-	}
-	
-	function isValidParams(deps, callback, code) {
+        }
+    }
+    
+    function isValidParams(deps, callback, code) {
 
-		if (isArray(deps)) {
+        if (isArray(deps)) {
 
             if (typeof(callback) === "function") {
 
@@ -354,21 +354,21 @@
 
             } else {
 
-                logs.error(code + "->1");		//, prop
+                logs.error(code + "->1");        //, prop
             }
 
-		} else {
+        } else {
 
-			logs.error(code + "->2");
-		}
-		
-		return false;
-	}
-	
+            logs.error(code + "->2");
+        }
+        
+        return false;
+    }
+    
     function createModuleList() {
         
-        var list          = {};	//lista z modułami
-		var waitingDefine = [];	//to co wpadło za pomocą funkcji define, wpada na tąże listę
+        var list          = {};    //lista z modułami
+        var waitingDefine = [];    //to co wpadło za pomocą funkcji define, wpada na tąże listę
         
         return {
 
@@ -569,19 +569,19 @@
         }
 
 
-		function defineOne(deps, moduleDefine) {
+        function defineOne(deps, moduleDefine) {
             
-			waitingDefine.push({
-				deps: deps,
-				define : moduleDefine
-			});
-			
-			var actualLoading = scriptLoader.getActialLoading();
+            waitingDefine.push({
+                deps: deps,
+                define : moduleDefine
+            });
             
-			if (isNoEmptyString(actualLoading)) {
-				definePushToModule(false, actualLoading);
-			}
-		}
+            var actualLoading = scriptLoader.getActialLoading();
+            
+            if (isNoEmptyString(actualLoading)) {
+                definePushToModule(false, actualLoading);
+            }
+        }
         
         
         function isCircleDeps(path, depsList) {
@@ -664,12 +664,12 @@
                         
                         if (list[actualLoadingPath].isDefine() === false) {
                             
-							logs.warn(12.2, actualLoadingPath);
-							
-													//dla doczytywanych plików które nie robią define na końcu pliku
+                            logs.warn(12.2, actualLoadingPath);
+                            
+                                                    //dla doczytywanych plików które nie robią define na końcu pliku
                             list[actualLoadingPath].setDefine([], function(){
-								return undefined;
-							});
+                                return undefined;
+                            });
                         }
                     }
                 }
@@ -682,7 +682,7 @@
     }
     
     function createModule(nameModule) {
-		
+        
         var isInit        = false;
         
         var depsNamesSave = null;
@@ -706,7 +706,7 @@
         
         function get(callback) {
             
-			waiting.add(callback);
+            waiting.add(callback);
         }
         
         
@@ -737,7 +737,7 @@
                         return;
                     }
                     
-					
+                    
                     waiting.exec([evalValue]);
                 });
 
@@ -761,17 +761,17 @@
         }
     }
         
-	function createScriptLoader(configPath, crossorigin) {
+    function createScriptLoader(configPath, crossorigin) {
         
-											//znaczniki script, z aktualnie ładowanymi modułami
-		var loadingScriprs = {};
+                                            //znaczniki script, z aktualnie ładowanymi modułami
+        var loadingScriprs = {};
         
         
-		return {
-			load            : load,
+        return {
+            load            : load,
             getActialLoading: getActialLoading,
             resolvePath     : resolvePath
-		};
+        };
         
         
         
@@ -783,41 +783,41 @@
                 return;
             }
             
-			if (path.substr(0, 8) === "https://") {
-				
-				return path;
-				
-			} else if (path.substr(0, 7) === "http://") {
-				
-				return path;
-			
-			} else if (path.substr(0, 2) === "//") {
-				
-				return path;
-			
-															//path typu platforma/zasob
-			} else if (path.indexOf("/") >= 0) {
-			
-				for (var alias in configPath) {
-															//alias na samym początku musi się znajdować
-					if (path.indexOf(alias + "/") === 0) {
+            if (path.substr(0, 8) === "https://") {
+                
+                return path;
+                
+            } else if (path.substr(0, 7) === "http://") {
+                
+                return path;
+            
+            } else if (path.substr(0, 2) === "//") {
+                
+                return path;
+            
+                                                            //path typu platforma/zasob
+            } else if (path.indexOf("/") >= 0) {
+            
+                for (var alias in configPath) {
+                                                            //alias na samym początku musi się znajdować
+                    if (path.indexOf(alias + "/") === 0) {
 
-						var newPath = path.replace(alias, configPath[alias]);
+                        var newPath = path.replace(alias, configPath[alias]);
 
-						if (path !== newPath) {
+                        if (path !== newPath) {
 
-							return newPath + "." + extension;
+                            return newPath + "." + extension;
 
-						} else {
+                        } else {
 
-							logs.error(17, path);
-							return;
-						}
-					}
-				}
-			}
-				
-            logs.error(18, path);	
+                            logs.error(17, path);
+                            return;
+                        }
+                    }
+                }
+            }
+                
+            logs.error(18, path);    
         }
         
         
@@ -835,7 +835,7 @@
         }
         
         
-		function load(path, callback) {
+        function load(path, callback) {
             
             var fullPath = resolvePath(path, "js");
             
@@ -868,7 +868,7 @@
                 
                 //... nie złądowano ...
             }
-		}
+        }
         
                                             //sprawdzam, czy dla tej domeny włączyć nagłówek crossorigin="anonimus"
         function isCrossorigin(path) {
@@ -911,7 +911,7 @@
             return script;
             
             
-			function onreadystatechange() {
+            function onreadystatechange() {
                 
                 if (script.readyState === 'loaded' || script.readyState === 'complete') {
                     runCallback();
@@ -946,7 +946,7 @@
             https://cdnjs.cloudflare.com/ajax/libs/stacktrace.js/0.6.4/stacktrace.js
             */
         }
-	}
+    }
 
     function forEach(list, callback){
         
@@ -954,7 +954,7 @@
             callback(list[i]);
         }
     }
-	
+    
     function isNoEmptyString(value) {
 
         return typeof(value) === "string" && value !== "";
@@ -1059,158 +1059,158 @@
 
     function createRunnerBox(require){
 
-		var attrNameToRun   = "data-run-module";
+        var attrNameToRun   = "data-run-module";
         var propStorageName = 'runnerBoxElementProp' + ((new Date()).getTime());
-		
-		
+        
+        
         return {
             "runElement"  : runElement,
             "whenRun"     : whenRun
         };
-		
-		
+        
+        
         function getObject(item) {
-			
-			if (propStorageName in item) {
-				//ok
-			} else {
-				item[propStorageName] = createMapper();
-			}
-			
-			return item[propStorageName];
+            
+            if (propStorageName in item) {
+                //ok
+            } else {
+                item[propStorageName] = createMapper();
+            }
+            
+            return item[propStorageName];
         }
-				
-		function createEventHard() {
+                
+        function createEventHard() {
 
-			var isReady  = false;
-			var callback = [];
+            var isReady  = false;
+            var callback = [];
 
-			return {
-				on : on,
-				exec : exec
-			};
+            return {
+                on : on,
+                exec : exec
+            };
 
-			function refresh() {
-				if (isReady === true) {
-					while (callback.length > 0) {
-						runCallback(callback.shift());
-					}
-				}
-			}
+            function refresh() {
+                if (isReady === true) {
+                    while (callback.length > 0) {
+                        runCallback(callback.shift());
+                    }
+                }
+            }
 
-			function runCallback(callback) {
-				setTimeout(callback, 0);
-			}
+            function runCallback(callback) {
+                setTimeout(callback, 0);
+            }
 
-			function exec() {
-				if (isReady === false) {
-					isReady = true;
-					refresh();
-				} else {
-					logs.error(41);
-					refresh();
-				}
-			}
+            function exec() {
+                if (isReady === false) {
+                    isReady = true;
+                    refresh();
+                } else {
+                    logs.error(41);
+                    refresh();
+                }
+            }
 
-			function on(newCallback) {
-				callback.push(newCallback);
-				refresh();
-			}
-		}
+            function on(newCallback) {
+                callback.push(newCallback);
+                refresh();
+            }
+        }
 
-		function createMapper() {
+        function createMapper() {
 
-			var isRunFlag = false;
-			var value     = null;
-			var event     = createEventHard();
-			
-			return {
-				onReady  : onReady,
-				setAsRun : setAsRun,
-				setValue : setValue,
-				isRun    : isRun
-			};
-			
-			function isRun() {
-				return isRunFlag;
-			}
-			
-			function onReady(callback) {
-				event.on(function(){
-					callback(value);
-				});
-			}
-			
-			function setAsRun() {
-				
-				if (isRunFlag === false) {
-					isRunFlag = true;
-				} else {
-					logs.error(44);
-				}
-			}
-			
-			function setValue(newValue) {
+            var isRunFlag = false;
+            var value     = null;
+            var event     = createEventHard();
+            
+            return {
+                onReady  : onReady,
+                setAsRun : setAsRun,
+                setValue : setValue,
+                isRun    : isRun
+            };
+            
+            function isRun() {
+                return isRunFlag;
+            }
+            
+            function onReady(callback) {
+                event.on(function(){
+                    callback(value);
+                });
+            }
+            
+            function setAsRun() {
+                
+                if (isRunFlag === false) {
+                    isRunFlag = true;
+                } else {
+                    logs.error(44);
+                }
+            }
+            
+            function setValue(newValue) {
 
-				if (isRunFlag === true) {
-					
-					value     = newValue;
-					event.exec();
-				
-				} else {
-					logs.error(42);
-				}
-			}
-		}
-		
-		function runElement(domElementToRun) {
+                if (isRunFlag === true) {
+                    
+                    value     = newValue;
+                    event.exec();
+                
+                } else {
+                    logs.error(42);
+                }
+            }
+        }
+        
+        function runElement(domElementToRun) {
 
-			
-			var list = findFromDocument(domElementToRun);
-			
-			
-			forEachRun(list, function(item){
-				
-				
-				var widgetName = getRunModuleName(item);
-
-
-				var part = widgetName.split(".");
-
-				if (part.length !== 2) {
-					throw Error("Nieprawidłowy format uruchamianego modułu: " + widgetName);
-				}
-								
-				
-				var moduleName   = part[0];
-				var moduleMethod = part[1];
+            
+            var list = findFromDocument(domElementToRun);
+            
+            
+            forEachRun(list, function(item){
+                
+                
+                var widgetName = getRunModuleName(item);
 
 
-				require([moduleName], function(module){
-					
-					if (toRunnable(item) === true) {
-						
-						if (module && typeof(module[moduleMethod]) === "function") {
-							
-							getObject(item).setAsRun();
-							
-							var modEval = module[moduleMethod](item);
-							
-							getObject(item).setValue(modEval);
-							
-							item.setAttribute(attrNameToRun + "-isrun", "1");
+                var part = widgetName.split(".");
 
-						} else {
+                if (part.length !== 2) {
+                    throw Error("Nieprawidłowy format uruchamianego modułu: " + widgetName);
+                }
+                                
+                
+                var moduleName   = part[0];
+                var moduleMethod = part[1];
 
-							throw Error("Brak zdefiniowanej funkcji \"" + moduleMethod + "\" dla : " + moduleName);
-						}
-					}
-				});
 
-			});
-		}
-		
-		
+                require([moduleName], function(module){
+                    
+                    if (toRunnable(item) === true) {
+                        
+                        if (module && typeof(module[moduleMethod]) === "function") {
+                            
+                            getObject(item).setAsRun();
+                            
+                            var modEval = module[moduleMethod](item);
+                            
+                            getObject(item).setValue(modEval);
+                            
+                            item.setAttribute(attrNameToRun + "-isrun", "1");
+
+                        } else {
+
+                            throw Error("Brak zdefiniowanej funkcji \"" + moduleMethod + "\" dla : " + moduleName);
+                        }
+                    }
+                });
+
+            });
+        }
+        
+        
         function forEachRun(list, callback) {
                                                     //utwórz kopię
             var copy = [];
@@ -1231,14 +1231,14 @@
                 }, 0);
             }
         }
-		
-		function findFromDocument(elementSearch) {
+        
+        function findFromDocument(elementSearch) {
             
             var listWidgetsRun = elementFindAll(elementSearch, "*[" + attrNameToRun + "]", attrNameToRun);
             
             var result = [];
             var item   = null;
-			
+            
             for (var i=0; i<listWidgetsRun.length; i++) {
 
                 item = listWidgetsRun[i];
@@ -1291,7 +1291,7 @@
                 }
             }
         }
-		
+        
         function elementFindAll(element, selector, attribute) {
 
             if (element === document) {
@@ -1357,33 +1357,33 @@
         }
 
         function whenRun(element, callback) {
-			
-			if (hasClassRunnable(element)) {
-				
-				getObject(element).onReady(callback);
-			
-			} else {
-			
-				logs.error(43);
-			}
+            
+            if (hasClassRunnable(element)) {
+                
+                getObject(element).onReady(callback);
+            
+            } else {
+            
+                logs.error(43);
+            }
         }
-		
-		function hasClassRunnable(element) {
-			
+        
+        function hasClassRunnable(element) {
+            
             var value = element.getAttribute(attrNameToRun);
             
             return (typeof(value) === "string" && value !== "");
-		}
-		
-		function toRunnable(element) {
-			
+        }
+        
+        function toRunnable(element) {
+            
             return (hasClassRunnable(element) && getObject(element).isRun() === false);
         }
-		
+        
         function getRunModuleName(item) {
             
             var widgetName = item.getAttribute(attrNameToRun);
-			
+            
             if (typeof(widgetName) === "string" && widgetName !== "") {
                 
                 return widgetName;
