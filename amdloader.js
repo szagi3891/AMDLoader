@@ -38,15 +38,19 @@
 	28 : błędy związane z property window.define
 	29 : błędy związane z property require.config
 	30 : błędy związane z property require.runnerBox
-	31 : błedy zwiazane z property require.getLogs
+	31 : błędy związane z property require.runnerBox.runElement
+	32 : błędy związane z property require.runnerBox.whenRun
+	33 : błedy zwiazane z property require.getLogs
 	
 								zdeprecjonowane properties
-	32 : błędy związane z property window.requirejs
-	33 : błędy związane z property window.require.toUrl
-	34 : błędy związane z property window.require.version
-	35 : błędy związane z property window.define.amd
-	36 : błędy związane z property window.require.isBrowser
-	37 : błędy związane z property window.require.specified
+	34 : błędy związane z property window.requirejs
+	35 : błędy związane z property window.require.toUrl
+	36 : błędy związane z property window.require.version
+	37 : błędy związane z property window.define.amd
+	38 : błędy związane z property window.require.isBrowser
+	39 : błędy związane z property window.require.specified
+	
+	//40 ...
 	
 		->1 : odczyt zdeprecjonowanej property
 		->2 : próba zapisu zabezpieczonej property
@@ -65,23 +69,26 @@
     
 										//interfejs publiczny
 	
-	freezProperty(window       , "require"  , requireGlobal                 , false, 27);
-	freezProperty(window       , "define"   , defineGlobal                  , false, 28);
-	freezProperty(requireGlobal, "config"   , configGlobal                  , false, 29);
-	freezProperty(requireGlobal, "runnerBox", createRunnerBox(requireGlobal), false, 30);
-	freezProperty(requireGlobal, "getLogs"  , logs.getLogs                  , false, 31);
+	freezProperty(window                 , "require"   , requireGlobal                     , false, 27);
+	freezProperty(window                 , "define"    , defineGlobal                      , false, 28);
+	freezProperty(requireGlobal          , "config"    , configGlobal                      , false, 29);
+	freezProperty(requireGlobal          , "runnerBox" , createRunnerBox(requireGlobal)    , false, 30);
+	freezProperty(requireGlobal.runnerBox, "runElement", requireGlobal.runnerBox.runElement, false, 31);
+	freezProperty(requireGlobal.runnerBox, "whenRun"   , requireGlobal.runnerBox.whenRun   , false, 32);
+	freezProperty(requireGlobal          , "getLogs"   , logs.getLogs                      , false, 33);
 	
 										//depreceted
-	freezProperty(window       , "requirejs", requireGlobal   , true , 32);
-	freezProperty(requireGlobal, "toUrl"    , toUrl           , true , 33);
-	freezProperty(requireGlobal, "version"  , "2.99999"       , true , 34);
-	freezProperty(defineGlobal , "amd"      , {}              , true , 35);
-	freezProperty(requireGlobal, "isBrowser", true            , true , 36);
-	freezProperty(requireGlobal, "specified", globalSpecified , true , 37);
+	
+	freezProperty(window                 , "requirejs" , requireGlobal                     , true , 34);
+	freezProperty(requireGlobal          , "toUrl"     , toUrl                             , true , 35);
+	freezProperty(requireGlobal          , "version"   , "2.99999"                         , true , 36);
+	freezProperty(defineGlobal           , "amd"       , {}                                , true , 37);
+	freezProperty(requireGlobal          , "isBrowser" , true                              , true , 38);
+	freezProperty(requireGlobal          , "specified" , globalSpecified                   , true , 39);
 	
 	
-												//uruchomienie startera
-    createStarter(requireGlobal);
+										//uruchomienie startera
+    runStarter(requireGlobal);
     
 	
 	function globalSpecified() {
@@ -1387,7 +1394,7 @@
     }
                                 //amd module starter
 
-    function createStarter(require){
+    function runStarter(require){
 
         var JSONParse = createJSONParser();
 
