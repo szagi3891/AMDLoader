@@ -2,7 +2,8 @@
     
     /*
     1  : "Config: Niepoprawna zawartość klucza 'paths'"
-    2  : "Config: wielokrotna inicjacja"
+    2.1 : "Config: próba konfiguracji z zewnątrz"
+    2.2 : "Config: wielokrotna inicjacja"
     3  : "Require: nie została zainicjowana mapa z plikami"
     4  : "define: nie została zainicjowana mapa z plikami"
     5  : "getBasePath: brak znaku /: " + path
@@ -71,7 +72,7 @@
     
     freezProperty(window                 , "require"   , requireGlobal                     , false, 27);
     freezProperty(window                 , "define"    , defineGlobal                      , false, 28);
-    freezProperty(requireGlobal          , "config"    , configGlobal                      , false, 29);
+    freezProperty(requireGlobal          , "config"    , configMock                        , false, 29);
     freezProperty(requireGlobal          , "runnerBox" , createRunnerBox(requireGlobal)    , false, 30);
     freezProperty(requireGlobal.runnerBox, "runElement", requireGlobal.runnerBox.runElement, false, 31);
     freezProperty(requireGlobal.runnerBox, "whenRun"   , requireGlobal.runnerBox.whenRun   , false, 32);
@@ -88,13 +89,16 @@
     
     
                                         //uruchomienie startera
-    runStarter(requireGlobal);
+    runStarter(configGlobal, requireGlobal);
     
     
     function globalSpecified() {
         return true;
     }
     
+    function configMock() {
+        logs.error(2.1);
+    }
     
     function createLogs() {
         
@@ -228,7 +232,7 @@
 
         } else {
             
-            logs.error(2);
+            logs.error(2.2);
         }
         
                                         //konwertuje na tablicę, która posiada niepuste stringi
@@ -1394,7 +1398,7 @@
     }
                                 //amd module starter
 
-    function runStarter(require){
+    function runStarter(configGlobal, require){
 
         var JSONParse = createJSONParser();
 
@@ -1415,7 +1419,7 @@
 
                 var mapAmd = JSONParse(map);
 
-                runRequireMap(mapAmd, getListPreLoad(), getTimeoutStart(), getCrossorigin());
+                runRequireMap(configGlobal, mapAmd, getListPreLoad(), getTimeoutStart(), getCrossorigin());
 
                 return true;
             }
@@ -1459,7 +1463,7 @@
             }
         }
 
-        function runRequireMap(pathConfig, listPreload, timeoutStart, listCrossorigin){
+        function runRequireMap(configGlobal, pathConfig, listPreload, timeoutStart, listCrossorigin){
 
             var runMain = onlyOnce(function(){
                 setTimeout(main, 0);
@@ -1470,7 +1474,7 @@
 
             function main() {
 
-                require.config({
+                configGlobal({
                     paths: pathConfig,
                     crossorigin: listCrossorigin
                 });
