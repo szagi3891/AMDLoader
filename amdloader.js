@@ -79,10 +79,10 @@
     
                                         //depreceted
     
-    freezProperty(requireGlobal          , "config"    , configMock                        , true , 33);
-    freezProperty(window                 , "requirejs" , requireGlobal                     , true , 34);
+    //freezProperty(requireGlobal          , "config"    , configMock                        , true , 33);
+    //freezProperty(window                 , "requirejs" , requireGlobal                     , true , 34);
     freezProperty(requireGlobal          , "toUrl"     , toUrl                             , true , 35);
-    freezProperty(requireGlobal          , "version"   , "2.99999"                         , true , 36);
+    //freezProperty(requireGlobal          , "version"   , "2.99999"                         , true , 36);
     freezProperty(defineGlobal           , "amd"       , {}                                , true , 37);
     freezProperty(requireGlobal          , "isBrowser" , true                              , true , 38);
     freezProperty(requireGlobal          , "specified" , globalSpecified                   , true , 39);
@@ -96,9 +96,9 @@
         return true;
     }
     
-    function configMock() {
+    /*function configMock() {
         logs.error(2.1);
-    }
+    }*/
     
     function createLogs() {
         
