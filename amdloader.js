@@ -41,12 +41,10 @@
     30 : błędy związane z property window.require.runnerBox.runElement
     31 : błędy związane z property window.require.runnerBox.whenRun
     32 : błedy zwiazane z property window.require.getLogs
+    33 : błedy zwiazane z property window.require.defined
     
                                 zdeprecjonowane properties
-    33 : błędy związane z property window.require.config
-    34 : błędy związane z property window.requirejs
     35 : błędy związane z property window.require.toUrl
-    36 : błędy związane z property window.require.version
     37 : błędy związane z property window.define.amd
     38 : błędy związane z property window.require.isBrowser
     39 : błędy związane z property window.require.specified
@@ -77,12 +75,12 @@
     freezProperty(requireGlobal.runnerBox, "whenRun"   , requireGlobal.runnerBox.whenRun   , false, 31);
     freezProperty(requireGlobal          , "getLogs"   , logs.getLogs                      , false, 32);
     
+    freezProperty(requireGlobal          , "defined"   , isLoad                            , false, 33);
+    
+    
                                         //depreceted
     
-    //freezProperty(requireGlobal          , "config"    , configMock                        , true , 33);
-    //freezProperty(window                 , "requirejs" , requireGlobal                     , true , 34);
     freezProperty(requireGlobal          , "toUrl"     , toUrl                             , true , 35);
-    //freezProperty(requireGlobal          , "version"   , "2.99999"                         , true , 36);
     freezProperty(defineGlobal           , "amd"       , {}                                , true , 37);
     freezProperty(requireGlobal          , "isBrowser" , true                              , true , 38);
     freezProperty(requireGlobal          , "specified" , globalSpecified                   , true , 39);
@@ -91,14 +89,19 @@
                                         //uruchomienie startera
     runStarter(configGlobal, requireGlobal);
     
+    function isLoad(path) {
+        
+        if (scriptLoader === null) {
+            return false;
+        } else {
+            return scriptLoader.isLoad(path);
+        }
+    }
     
     function globalSpecified() {
         return true;
     }
     
-    /*function configMock() {
-        logs.error(2.1);
-    }*/
     
     function createLogs() {
         
@@ -772,9 +775,10 @@
         
         
         return {
-            load            : load,
-            getActialLoading: getActialLoading,
-            resolvePath     : resolvePath
+            load             : load,
+            getActialLoading : getActialLoading,
+            resolvePath      : resolvePath,
+            isLoad           : isLoad
         };
         
         
@@ -800,7 +804,7 @@
                 return path;
             
                                                             //path typu platforma/zasob
-            } else if (path.indexOf("/") >= 0) {
+            } else {
             
                 for (var alias in configPath) {
                                                             //alias na samym początku musi się znajdować
@@ -839,6 +843,21 @@
         }
         
         
+        function isLoad(path) {
+            
+            var fullPath = resolvePath(path, "js");
+            
+            if (isNoEmptyString(fullPath)) {
+                 
+                if (fullPath in loadingScriprs) {
+                    return loadingScriprs[fullPath].query.isExec();
+                }
+            }
+            
+            return false;
+        }
+        
+        
         function load(path, callback) {
             
             var fullPath = resolvePath(path, "js");
@@ -852,12 +871,11 @@
                 } else {
 
                     var script = loadScript(fullPath, function(){
-
-                        //loadingScriprs[path] = undefined;
-                        loadingScriprs[path].query.exec([]);
+                        
+                        loadingScriprs[fullPath].query.exec([]);
                     });
-
-                    loadingScriprs[path] = {
+                    
+                    loadingScriprs[fullPath] = {
                         script: script,
                         query : queryCallbackSync()
                     };
@@ -866,7 +884,7 @@
                     appendToDom(script);
                 }
 
-                loadingScriprs[path].query.add(callback);
+                loadingScriprs[fullPath].query.add(callback);
             
             } else {
                 
@@ -984,10 +1002,14 @@
         
         return {
             
-            'exec' : exec,
-            'add'  : add
+            'exec'   : exec,
+            'add'    : add,
+            'isExec' : isExecFn
         };
         
+        function isExecFn() {
+            return isExec;
+        }
         
         function exec(args) {
             
