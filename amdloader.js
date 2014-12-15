@@ -778,7 +778,7 @@
             load             : load,
             getActialLoading : getActialLoading,
             resolvePath      : resolvePath,
-            isLoad           : isLoad
+            isLoad           : isLoadLocal
         };
         
         
@@ -843,7 +843,7 @@
         }
         
         
-        function isLoad(path) {
+        function isLoadLocal(path) {
             
             var fullPath = resolvePath(path, "js");
             
