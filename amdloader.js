@@ -558,21 +558,23 @@
         
         function requireOne(path, callback) {
             
-            if (path in list) {
+            var fullPath = scriptLoader.resolvePath(path, "js");
+            
+            if (fullPath in list) {
                 
                 //ok
             
             } else  {
                 
-                list[path] = createModule(path);
+                list[fullPath] = createModule(path);
                 
-                scriptLoader.load(path, function(){
+                scriptLoader.load(fullPath, function(){
                     
-                    definePushToModule(true, path);
+                    definePushToModule(true, fullPath);
                 });
             }
             
-            list[path].get(callback);
+            list[fullPath].get(callback);
         }
 
 
@@ -682,7 +684,7 @@
                 }
                 
             } else {
-            
+                
                 logs.error(13, actualLoadingPath);
             }
         }
@@ -858,9 +860,7 @@
         }
         
         
-        function load(path, callback) {
-            
-            var fullPath = resolvePath(path, "js");
+        function load(fullPath, callback) {
             
             if (isNoEmptyString(fullPath)) {
                  
@@ -914,6 +914,9 @@
         
         function loadScript(path, callback) {
             
+                                            //Opcja do testowania zachowania ładowania pod IE
+            var ieTestBehavior = false;
+            
             var isExec    = false;                    
             var script    = document.createElement('script');
 
@@ -923,6 +926,9 @@
             script.async  = true;
             script.defer  = true;
             
+            if (ieTestBehavior === true) {
+                script.readyState = 'interactive';
+            }
             
             if (isCrossorigin(path)) {
                 script.setAttribute("crossorigin", "anonymous");
@@ -945,7 +951,11 @@
                 if (isExec === true) {
                     return;
                 }
-
+                
+                if (ieTestBehavior === true) {
+                    script.readyState = undefined;
+                }
+                
                 isExec = true;
                 
                 callback(script);
