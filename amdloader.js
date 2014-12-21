@@ -102,7 +102,6 @@
         return true;
     }
     
-    
     function createLogs() {
         
         var list = [];
@@ -166,7 +165,6 @@
         }
     }
     
-    
     function freezProperty(obj, prop, value, isDepreceted, errorCode, errorCaption) {
         
         try {
@@ -206,7 +204,6 @@
         }
     }
     
-    
     function toUrl(url) {
         
         if (isNoEmptyString(url)) {
@@ -218,7 +215,6 @@
             logs.error(26);
         }
     }
-    
     
     function configGlobal(conf) {
 
@@ -652,7 +648,7 @@
                     
                     while (waitingDefine.length > 0) {
                         
-                        var item = waitingDefine.shift();
+                        var item = waitingDefine.pop();
                         
                         if (isCircleDeps(actualLoadingPath, item.deps)) {
                             
@@ -830,7 +826,6 @@
             logs.error(18, path);    
         }
         
-        
         function getActialLoading() {
             
             for (var prop in loadingScriprs) {
@@ -843,7 +838,6 @@
             
             return null;
         }
-        
         
         function isLoadLocal(path) {
             
@@ -858,7 +852,6 @@
             
             return false;
         }
-        
         
         function load(fullPath, callback) {
             
@@ -905,12 +898,10 @@
             return false;
         }
         
-        
         function appendToDom(script) {
             
             document.getElementsByTagName('head')[0].appendChild(script);
         }
-        
         
         function loadScript(path, callback) {
             
@@ -1001,7 +992,6 @@
     function queryCallbackAsync() {
         return queryCallback(false);
     }
-    
     
     function queryCallback(isSync) {
         
@@ -1428,8 +1418,8 @@
             return null;
         }
     }
+    
                                 //amd module starter
-
     function runStarter(configGlobal, require){
 
         var JSONParse = createJSONParser();
