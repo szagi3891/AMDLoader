@@ -1599,8 +1599,6 @@
 
                         return undefined;
                     }
-                    
-                    return undefined;
                 }
             }
         }
