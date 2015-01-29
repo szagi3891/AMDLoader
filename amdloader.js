@@ -58,6 +58,8 @@
     42 : zdublowane przypisane do obiektu
     43 : próba uruchomienia require.runnerBox.whenRun na elemencie który nie jest modułem
     44 : setAsRun - nieprawidłowy stan
+    45 : próba wykonania funkcji setDefine na zamkniętym module
+    46 : defineOne, brak odpowiednika dla aktualnie wczytywanego pliku na liście modułów
     */
     
     
@@ -99,7 +101,7 @@
     }
     
     function globalSpecified() {
-        return true;
+        return false;
     }
     
     function createLogs() {
@@ -482,7 +484,7 @@
         }
         
         
-        //zwraca listę modułów - pod warunkiem że wszystkei zostały poprawnie zainicjowane
+        //zwraca listę modułów - pod warunkiem że wszystkei zostały poprawnie zainicjowane
         function requireModules(deps, callback) {
             
             var isExec   = false;
@@ -566,25 +568,61 @@
                 
                 scriptLoader.load(fullPath, function(){
                     
-                    definePushToModule(true, fullPath);
+                    definePushToModule(fullPath);
                 });
             }
             
             list[fullPath].get(callback);
         }
 
+        function definePushToModule(actualLoadingPath) {
+                        
+            if (actualLoadingPath in list) {
+                
+                while (waitingDefine.length > 0) {
+
+                    var item = waitingDefine.shift();
+
+                    if (isCircleDeps(actualLoadingPath, item.deps)) {
+
+                        logs.error(12.1, actualLoadingPath);
+
+                    } else {
+                        
+                        list[actualLoadingPath].setDefine(item.deps, item.define);
+                    }
+                }
+                                            //dla doczytywanych plików które nie robią define na końcu pliku
+                list[actualLoadingPath].closeDefine();
+                
+            } else {
+                
+                logs.error(13, actualLoadingPath);
+            }
+        }
+        
 
         function defineOne(deps, moduleDefine) {
-            
-            waitingDefine.push({
-                deps: deps,
-                define : moduleDefine
-            });
             
             var actualLoading = scriptLoader.getActialLoading();
             
             if (isNoEmptyString(actualLoading)) {
-                definePushToModule(false, actualLoading);
+                
+                if (actualLoading in list) {
+                    
+                    list[actualLoading].setDefine(deps, moduleDefine);
+                
+                } else {
+                    
+                    logs.error(46, actualLoading);
+                }
+            
+            } else {
+            
+                waitingDefine.push({
+                    deps: deps,
+                    define : moduleDefine
+                });
             }
         }
         
@@ -637,58 +675,13 @@
                     }
                 }
             }
-        }
-        
-        
-        function definePushToModule(isLoad, actualLoadingPath) {
-                        
-            if (actualLoadingPath in list) {
-                
-                if (waitingDefine.length > 0) {
-                    
-                    while (waitingDefine.length > 0) {
-                        
-                        var item = waitingDefine.pop();
-                        
-                        if (isCircleDeps(actualLoadingPath, item.deps)) {
-                            
-                            logs.error(12.1, actualLoadingPath);
-                        
-                        } else {
-                            
-                            list[actualLoadingPath].setDefine(item.deps, item.define);
-                        }
-                    }
-                
-                } else {
-                    
-                                                            //jelśi skrypt zaadowano, a ten nie utworzyl modulu, to stworz pusty
-                    
-                    if (isLoad === true) {
-                        
-                        
-                        if (list[actualLoadingPath].isDefine() === false) {
-                            
-                            logs.warn(12.2, actualLoadingPath);
-                            
-                                                    //dla doczytywanych plików które nie robią define na końcu pliku
-                            list[actualLoadingPath].setDefine([], function(){
-                                return undefined;
-                            });
-                        }
-                    }
-                }
-                
-            } else {
-                
-                logs.error(13, actualLoadingPath);
-            }
-        }
+        }  
     }
     
     function createModule(nameModule) {
         
         var isInit        = false;
+        var isClose       = false;
         
         var depsNamesSave = null;
         var evalValue     = null;
@@ -697,11 +690,30 @@
         
         
         return {
-            "isDefine"  : isDefine,
-            "setDefine" : setDefine,
-            "getDeps"   : getDeps,
-            "get"       : get
+            isDefine    : isDefine,
+            setDefine   : setDefine,
+            getDeps     : getDeps,
+            get         : get,
+            closeDefine : closeDefine
         };
+        
+        
+        function closeDefine() {
+            
+            if (isClose === false) {
+                
+                isClose = true;
+                
+                if (isInit === false) {
+                    
+                    isInit = true;
+                                                //pusta definicja dla modułów które nie utworzyły definicji
+                    setDefine([], function(){
+                        return undefined;
+                    });
+                }
+            }
+        }
         
         
         function isDefine() {
@@ -716,6 +728,11 @@
         
         
         function setDefine(depsName, defineModuleFunction) {
+            
+            if (isClose === true) {
+                logs.error(45, nameModule);
+                return;
+            }
             
             if (isInit === false) {
                 
