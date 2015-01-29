@@ -100,7 +100,12 @@
         }
     }
     
-    function globalSpecified() {
+    function globalSpecified(path) {
+        
+        if (scriptLoader !== null && scriptLoader.isSpecified) {
+            return scriptLoader.isSpecified(path);
+        }
+        
         return false;
     }
     
@@ -210,7 +215,7 @@
         
         if (isNoEmptyString(url)) {
             
-            return scriptLoader.resolvePath(url);
+            return scriptLoader.resolvePath(url, "js", true);
             
         } else {
             
@@ -556,7 +561,7 @@
         
         function requireOne(path, callback) {
             
-            var fullPath = scriptLoader.resolvePath(path, "js");
+            var fullPath = scriptLoader.resolvePath(path, "js", true);
             
             if (fullPath in list) {
                 
@@ -700,18 +705,12 @@
         
         function closeDefine() {
             
-            if (isClose === false) {
+            isClose = true;
+            
+            if (isInit === false) {
                 
-                isClose = true;
-                
-                if (isInit === false) {
-                    
-                    isInit = true;
-                                                //pusta definicja dla modułów które nie utworzyły definicji
-                    setDefine([], function(){
-                        return undefined;
-                    });
-                }
+                isInit = true;
+                waiting.exec([undefined]);
             }
         }
         
@@ -730,6 +729,7 @@
         function setDefine(depsName, defineModuleFunction) {
             
             if (isClose === true) {
+                
                 logs.error(45, nameModule);
                 return;
             }
@@ -740,27 +740,30 @@
                 
                 depsNamesSave = depsName;
                 
-                modulesList.requireModulesWithModuleBase(nameModule, depsName, function(){
+                setTimeout(function(){
                     
-                    var depsValue = Array.prototype.slice.call(arguments, 0);
-                    
-                    try {
-                    
-                        evalValue = defineModuleFunction.apply(null, depsValue);
-                    
-                    } catch (errEval) {
+                    modulesList.requireModulesWithModuleBase(nameModule, depsName, function(){
                         
-                        logs.error(14, nameModule);
+                        var depsValue = Array.prototype.slice.call(arguments, 0);
                         
-                        setTimeout(function(){
-                            throw errEval;
-                        }, 0);
-                        
-                        return;
-                    }
-                    
-                    
-                    waiting.exec([evalValue]);
+                        try {
+
+                            evalValue = defineModuleFunction.apply(null, depsValue);
+
+                        } catch (errEval) {
+
+                            logs.error(14, nameModule);
+
+                            setTimeout(function(){
+                                throw errEval;
+                            }, 0);
+
+                            return;
+                        }
+
+
+                        waiting.exec([evalValue]);
+                    });
                 });
 
             } else {
@@ -793,16 +796,33 @@
             load             : load,
             getActialLoading : getActialLoading,
             resolvePath      : resolvePath,
-            isLoad           : isLoadLocal
+            isLoad           : isLoadLocal,
+            isSpecified      : isSpecified
         };
         
         
+        function isSpecified(path) {
+            
+            var fullPath = resolvePath(path, "js", false);
+            
+            if (isNoEmptyString(fullPath)) {
+                 
+                if (fullPath in loadingScriprs) {
+                    return true;
+                }
+            }
+            
+            return false;
+        }
         
-        function resolvePath(path, extension) {
+        function resolvePath(path, extension, errReport) {
             
             if (path.length > 0 && path[0] === ".") {
                 
-                logs.error(16, path);
+                if (errReport === true) {
+                    logs.error(16, path);
+                }
+            
                 return;
             }
             
@@ -822,25 +842,30 @@
             } else {
             
                 for (var alias in configPath) {
-                                                            //alias na samym początku musi się znajdować
+                                                            //alias na samym pocz<b9>tku musi si<ea> znajdowa<e6>
                     if (path.indexOf(alias + "/") === 0) {
 
                         var newPath = path.replace(alias, configPath[alias]);
 
                         if (path !== newPath) {
-
+                            
                             return newPath + "." + extension;
 
                         } else {
-
-                            logs.error(17, path);
+                            
+                            if (errReport === true) {
+                                logs.error(17, path);
+                            }
+                            
                             return;
                         }
                     }
                 }
             }
-                
-            logs.error(18, path);    
+            
+            if (errReport === true) {
+                logs.error(18, path);
+            }
         }
         
         function getActialLoading() {
@@ -858,7 +883,7 @@
         
         function isLoadLocal(path) {
             
-            var fullPath = resolvePath(path, "js");
+            var fullPath = resolvePath(path, "js", true);
             
             if (isNoEmptyString(fullPath)) {
                  
