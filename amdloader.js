@@ -215,7 +215,7 @@
         
         if (isNoEmptyString(url)) {
             
-            return scriptLoader.resolvePath(url, "js", true);
+            return scriptLoader.resolvePath(url, "", true);
             
         } else {
             
@@ -850,7 +850,11 @@
 
                         if (path !== newPath) {
                             
-                            return newPath + "." + extension;
+                            if (isNoEmptyString(extension)) {
+                                return newPath + "." + extension;
+                            } else {
+                                return newPath;
+                            }
 
                         } else {
                             
