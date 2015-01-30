@@ -507,26 +507,25 @@
                     retValue[depsName] = {
                         isInit : false,
                         value  : null
-                    };    
+                    };
+                    
+                    requireOne(depsName, function(moduleValue){
+
+                        var moduleInfo = retValue[depsName];
+
+                        if (moduleInfo.isInit === false) {
+
+                            moduleInfo.isInit = true;
+                            moduleInfo.value  = moduleValue;
+
+                            refreshStatus();
+
+                        } else {
+
+                            logs.error(11, depsName);
+                        }
+                    });
                 }
-                
-                
-                requireOne(depsName, function(moduleValue){
-                    
-                    var moduleInfo = retValue[depsName];
-                    
-                    if (moduleInfo.isInit === false) {
-                        
-                        moduleInfo.isInit = true;
-                        moduleInfo.value  = moduleValue;
-                        
-                        refreshStatus();
-                    
-                    } else {
-                        
-                        logs.error(11, depsName);
-                    }
-                });
             });
             
             refreshStatus();
@@ -534,6 +533,9 @@
             function refreshStatus() {
                 
                 if (isExec === false) {
+                    
+                    isExec = true;
+                    
                     
                     var arrReturn = [];
                     
@@ -547,8 +549,6 @@
                             return;
                         }
                     }
-                    
-                    isExec = true;
                     
                                                             //dozwolone jest wywołanie bez funkcji zwrotnej
                     if (typeof(callback) === "function") {
