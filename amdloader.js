@@ -242,7 +242,7 @@
         }
         
                                         //konwertuje na tablicę, która posiada niepuste stringi
-                                        //(w przypadku innego typu na wejściu pusta tablica)
+                                        //(w przypadku innego typu na wyjściu funkcji pusty obiekt(mapa))
         function getMapCrossorigin(list) {
             
             var ret = {};
