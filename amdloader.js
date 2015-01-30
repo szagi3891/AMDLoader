@@ -765,7 +765,7 @@
 
                         waiting.exec([evalValue]);
                     });
-                });
+                }, 0);
 
             } else {
             
