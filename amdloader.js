@@ -534,9 +534,6 @@
                 
                 if (isExec === false) {
                     
-                    isExec = true;
-                    
-                    
                     var arrReturn = [];
                     
                     for (var i = 0; i < deps.length; i++) {
@@ -549,6 +546,9 @@
                             return;
                         }
                     }
+                    
+                                                            //dopiero w tym miejscu musimy zaznaczyć tą flagę
+                    isExec = true;
                     
                                                             //dozwolone jest wywołanie bez funkcji zwrotnej
                     if (typeof(callback) === "function") {
