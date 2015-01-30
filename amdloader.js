@@ -611,6 +611,7 @@
             
             var actualLoading = scriptLoader.getActialLoading();
             
+                                                    //przypadek starszych IE
             if (isNoEmptyString(actualLoading)) {
                 
                 if (actualLoading in list) {
