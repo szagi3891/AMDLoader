@@ -66,6 +66,7 @@
     var modulesList    = createModuleList();    //mapa z modułami (oraz zależnościami)
     var scriptLoader   = null;                    //obiekt którym ładujemy pliki (tworzony po podaiu mapy z konfiguracją)
     var logs           = createLogs();            //logi
+    var queryRequire   = queryCallbackAsync();
     
     
                                         //interfejs publiczny
@@ -230,6 +231,7 @@
             if (valid(conf.paths)) {
 
                 scriptLoader = createScriptLoader(conf.paths, getMapCrossorigin(conf.crossorigin));
+                queryRequire.exec([]);
             
             } else {
                 
@@ -296,7 +298,11 @@
         
         if (scriptLoader === null) {
             
-            logs.error(3);
+            //logs.error(3);
+            
+            queryRequire.add(function(){
+                requireGlobal(deps, callback);
+            });
 
         } else {
             
