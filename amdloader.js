@@ -1,6 +1,9 @@
 (function(){
     
     /*
+    
+    Available via the MIT or new BSD license.
+    
     1  : "Config: Niepoprawna zawartość klucza 'paths'"
     2.1 : "Config: próba konfiguracji z zewnątrz"
     2.2 : "Config: wielokrotna inicjacja"
