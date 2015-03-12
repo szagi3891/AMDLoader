@@ -66,7 +66,6 @@
     var modulesList    = createModuleList();    //mapa z modułami (oraz zależnościami)
     var scriptLoader   = null;                    //obiekt którym ładujemy pliki (tworzony po podaiu mapy z konfiguracją)
     var logs           = createLogs();            //logi
-    var queryRequire   = queryCallbackAsync();
     
     
                                         //interfejs publiczny
@@ -231,7 +230,6 @@
             if (valid(conf.paths)) {
 
                 scriptLoader = createScriptLoader(conf.paths, getMapCrossorigin(conf.crossorigin));
-                queryRequire.exec([]);
             
             } else {
                 
@@ -298,12 +296,8 @@
         
         if (scriptLoader === null) {
             
-            //logs.error(3);
+            logs.error(3);
             
-            queryRequire.add(function(){
-                requireGlobal(deps, callback);
-            });
-
         } else {
             
             if (isValidParams(deps, callback, 24.1)) {
@@ -592,7 +586,7 @@
                 
                 while (waitingDefine.length > 0) {
 
-                    var item = waitingDefine.shift();
+                    var item = waitingDefine.pop();
 
                     if (isCircleDeps(actualLoadingPath, item.deps)) {
 
@@ -1539,20 +1533,18 @@
         }
 
         function runRequireMap(configGlobal, pathConfig, listPreload, timeoutStart, listCrossorigin){
-
-            var runMain = onlyOnce(function(){
-                setTimeout(main, 0);
+            
+            configGlobal({
+                paths: pathConfig,
+                crossorigin: listCrossorigin
             });
-
+            
+            var runMain = onlyOnce(main);
+            
             addEvent(window, "load", runMain);
             addTimeoutAfterDocumentReady(runMain, timeoutStart);        //timeout, po document.ContentLoad który odpala uruchamianie
 
             function main() {
-
-                configGlobal({
-                    paths: pathConfig,
-                    crossorigin: listCrossorigin
-                });
 
                 if (listPreload.length > 0) {
                     require(listPreload, function(){});
@@ -1573,7 +1565,7 @@
 
                     isExec = true;
 
-                    func();
+                    setTimeout(func, 0);
                 }
             };
         }
