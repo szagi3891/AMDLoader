@@ -70,7 +70,6 @@
     var scriptLoader   = null;                    //obiekt którym ładujemy pliki (tworzony po podaiu mapy z konfiguracją)
     var logs           = createLogs();            //logi
     
-    
                                         //interfejs publiczny
     
     freezProperty(window                 , "require"   , requireGlobal                     , false, 27);
@@ -1135,9 +1134,9 @@
 
     function createRunnerBox(require){
 
-        var attrNameToRun   = "data-run-module";
-        var propStorageName = 'runnerBoxElementProp' + ((new Date()).getTime());
-        
+        var attrNameToRun         = "data-run-module";
+        var propStorageName       = 'runnerBoxElementProp' + ((new Date()).getTime());
+        var requestAnimationFrame = createRequestAnimationFrame();
         
         return {
             "runElement"  : runElement,
@@ -1264,23 +1263,26 @@
 
                 require([moduleName], function(module){
                     
-                    if (toRunnable(item) === true) {
+                    requestAnimationFrame(function(){
                         
-                        if (module && typeof(module[moduleMethod]) === "function") {
-                            
-                            getObject(item).setAsRun();
-                            
-                            var modEval = module[moduleMethod](item);
-                            
-                            getObject(item).setValue(modEval);
-                            
-                            item.setAttribute(attrNameToRun + "-isrun", "1");
+                        if (toRunnable(item) === true) {
 
-                        } else {
+                            if (module && typeof(module[moduleMethod]) === "function") {
 
-                            throw Error("Brak zdefiniowanej funkcji \"" + moduleMethod + "\" dla : " + moduleName);
+                                getObject(item).setAsRun();
+
+                                var modEval = module[moduleMethod](item);
+
+                                getObject(item).setValue(modEval);
+
+                                item.setAttribute(attrNameToRun + "-isrun", "1");
+
+                            } else {
+
+                                throw Error("Brak zdefiniowanej funkcji \"" + moduleMethod + "\" dla : " + moduleName);
+                            }
                         }
-                    }
+                    });
                 });
 
             });
@@ -1466,6 +1468,29 @@
             }
             
             return null;
+        }
+        
+        function createRequestAnimationFrame() {
+
+            if (typeof(window.requestAnimationFrame) === "function") {
+                return window.requestAnimationFrame;
+            }
+
+            var vendors   = ['ms', 'moz', 'webkit', 'o'];
+            var candidate = null;
+
+            for(var x = 0; x < vendors.length; ++x) {
+
+                candidate = window[vendors[x]+'RequestAnimationFrame'];
+
+                if (typeof(candidate) === "function"){
+                    return candidate;
+                }
+            }
+
+            return function(callback) {
+                callback();
+            };
         }
     }
     
