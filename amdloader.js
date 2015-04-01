@@ -1312,7 +1312,7 @@
             
             var listWidgetsRun = elementFindAll(elementSearch, "*[" + attrNameToRun + "]", attrNameToRun);
             
-            var result = [];
+            var result = [elementSearch];
             var item   = null;
             
             for (var i=0; i<listWidgetsRun.length; i++) {
