@@ -1314,8 +1314,12 @@
             
             var listWidgetsRun = elementFindAll(elementSearch, "*[" + attrNameToRun + "]", attrNameToRun);
             
-            var result = [elementSearch];
+            var result = [];
             var item   = null;
+            
+            if (typeof(elementSearch.getAttribute) === "function") {
+                result.push(elementSearch);
+            }
             
             for (var i=0; i<listWidgetsRun.length; i++) {
 
