@@ -1317,7 +1317,7 @@
             var result = [];
             var item   = null;
             
-            if (typeof(elementSearch.getAttribute) === "function") {
+            if (isDataRunModule(elementSearch)) {
                 result.push(elementSearch);
             }
             
@@ -1332,6 +1332,13 @@
             
             return result;
             
+            function isDataRunModule(domElement) {
+                
+                if (typeof(domElement.getAttribute) !== "function") {
+                    return false;
+                }
+                return isNoEmptyString(domElement.getAttribute("data-run-module"));
+            }
             
             function isAddToExec(elementTest) {
 
