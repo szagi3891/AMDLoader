@@ -750,28 +750,23 @@
                         var depsValue = Array.prototype.slice.call(arguments, 0);
                         
                         try {
-
+                        
                             evalValue = defineModuleFunction.apply(null, depsValue);
-
+                        
                         } catch (errEval) {
-
-                            logs.error(14, nameModule);
-
-                            setTimeout(function(){
-                                throw errEval;
-                            }, 0);
-
+                            
+                            logs.error(14, nameModule + ' -> ' + errEval);
+                            
                             return;
                         }
-
-
+                        
                         waiting.exec([evalValue]);
                     });
                 }, 0);
 
             } else {
-            
-                logs.error(15, nameModule);
+                
+                logs.warn(15, nameModule);
             }
         }
         
