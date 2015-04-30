@@ -1667,7 +1667,7 @@
         }
         
         
-        //parseFuncBegin
+//parseFuncBeginForBuilder
         function mapParser(node) {
             
             var data = node.getAttribute("data-amd-map");
@@ -1713,7 +1713,7 @@
                 }
             }
         }
-        //parseFuncEnd
+//parseFuncEndForBuilder
 
         
         function addEvent(element, event, callback) {

@@ -63,6 +63,9 @@
     44 : setAsRun - nieprawidłowy stan
     45 : próba wykonania funkcji setDefine na zamkniętym module
     46 : defineOne, brak odpowiednika dla aktualnie wczytywanego pliku na liście modułów
+    
+    47.1 "Parsowanie mapy: Zduplikowany wpis"
+    47.2 "Parsowanie mapy: Problem ze sparsowaniem wpisu: "
     */
     
     
@@ -1524,10 +1527,6 @@
                                 //amd module starter
     function runStarter(configGlobal, require){
         
-        
-        var mapParser = createMapParser();
-        
-        
         var currentScript = getCurrentScript();
             
         if (currentScript !== null) {
@@ -1549,17 +1548,16 @@
         
         function runRequire(node) {
 
-            var map = node.getAttribute("data-static-amd-map");
+            
+            var mapAmd = mapParser(node);
 
-            if (typeof(map) === "string" && map !== "") {
-
-                var mapAmd = mapParser(map);
-
+            if (mapAmd !== null) {
+                
                 runRequireMap(configGlobal, mapAmd, getListPreLoad(), getTimeoutStart(), getCrossorigin());
-
                 return true;
             }
-
+            
+            
             function getListPreLoad() {
 
                 var list = node.getAttribute("data-amd-preload");
@@ -1667,45 +1665,45 @@
                 return (document.readyState === "complete" || document.readyState === "loaded");
             }
         }
-
-
-        function createMapParser(){
+        
+        
+        function mapParser(node) {
+            
+            var data = node.getAttribute("data-static-amd-map");
+            
+            if (typeof(data) === "string" && data !== "") {
+            } else {
+                return null;
+            }
             
             if (typeof(JSON) !== "undefined" && typeof(JSON.parse) === "function") {
-
-                return function() {
-
-                    return JSON.parse.apply(JSON, arguments);
-                };
-            }        
+                return JSON.parse(data);
+            }
             
-            return function(data) {
+            var rvalidtokens = /(,)|(\[|{)|(}|])|"(?:[^"\\\r\n]|\\["\\\/bfnrt]|\\u[\da-fA-F]{4})*"\s*:?|true|false|null|-?(?!0\d)\d+(?:\.\d+|)(?:[eE][+-]?\d+|)/g;
 
-                var rvalidtokens = /(,)|(\[|{)|(}|])|"(?:[^"\\\r\n]|\\["\\\/bfnrt]|\\u[\da-fA-F]{4})*"\s*:?|true|false|null|-?(?!0\d)\d+(?:\.\d+|)(?:[eE][+-]?\d+|)/g;
+            var requireNonComma,
+                depth = null,
+                str = trim( data + "" );
 
-                var requireNonComma,
-                    depth = null,
-                    str = trim( data + "" );
+            return str && !trim(str.replace(rvalidtokens, function(token, comma, open, close) {
 
-                return str && !trim(str.replace(rvalidtokens, function(token, comma, open, close) {
+                if (requireNonComma && comma) {
+                    depth = 0;
+                }
 
-                    if (requireNonComma && comma) {
-                        depth = 0;
-                    }
+                if (depth === 0) {
+                    return token;
+                }
 
-                    if (depth === 0) {
-                        return token;
-                    }
+                requireNonComma = open || comma;
 
-                    requireNonComma = open || comma;
+                depth += !close - !open;
 
-                    depth += !close - !open;
-
-                    return "";
-                })) ?
-                    (Function("return " + str))() :
-                    null;
-            };
+                return "";
+            })) ?
+                (Function("return " + str))() :
+                null;
             
             function trim(text) {
 
@@ -1722,18 +1720,13 @@
             }
         }
 
-
-
+        
         function addEvent(element, event, callback) {
-
+            
             if (element.addEventListener) {
                 element.addEventListener(event, callback, false);
-
-            } else if (element.attachEvent) {
-                element.attachEvent('on' + event, callback);
-
             } else {
-                throw Error('jsstarter -> addEvent -> nieprawidlowe odgalezienie');
+                element.attachEvent('on' + event, callback);
             }
         }
     }
@@ -1750,5 +1743,6 @@
     }
 
 }());
+
 
 
