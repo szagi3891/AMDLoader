@@ -4,19 +4,16 @@
     
     <meta charset="utf-8" />
     
-    <script type="text/javascript" src="amdloader.js" data-amd-map="lib:js/lib1 lib2:js/lib1"></script>
-    
-    <!--
-    opcjonalne:
-    data-timeout-start="2000"
-    data-crossorigin="js/lib1"
-    -->
-    
+    <script type="text/javascript" src="amdloader.js"
+        data-static-amd-map="{&quot;lib&quot;:&quot;../js/lib1&quot;,&quot;lib2&quot;:&quot;../js/lib1&quot;}"
+        data-timeout-start="2000"
+        data-crossorigin="js/lib1"
+        ></script>
 </head>
 
 
 <body>
-    strona z amdLoaderem
+    stronka z amdLoaderem
     
     <div data-run-module="lib/box.renderTime" data-color="red">module1</div>
     
