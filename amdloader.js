@@ -66,9 +66,11 @@
     */
     
     
-    var modulesList    = createModuleList();    //mapa z modułami (oraz zależnościami)
+    var isArray        = createIsArray();
+    var modulesList    = createModuleList();      //mapa z modułami (oraz zależnościami)
     var scriptLoader   = null;                    //obiekt którym ładujemy pliki (tworzony po podaiu mapy z konfiguracją)
     var logs           = createLogs();            //logi
+    
     
                                         //interfejs publiczny
     
@@ -611,6 +613,20 @@
 
         function defineOne(deps, moduleDefine) {
             
+            
+            var currentScript = getCurrentScript();
+            
+            if (currentScript !== null) {
+                
+                var srcCurrent = currentScript.getAttribute("src");
+                
+                if (srcCurrent in list) {
+                    list[srcCurrent].setDefine(deps, moduleDefine);
+                    return;
+                }
+            }
+            
+            
             var actualLoading = scriptLoader.getActialLoading();
             
                                                     //przypadek starszych IE
@@ -624,14 +640,14 @@
                     
                     logs.error(46, actualLoading);
                 }
-            
-            } else {
-            
-                waitingDefine.push({
-                    deps: deps,
-                    define : moduleDefine
-                });
+                
+                return;
             }
+            
+            waitingDefine.push({
+                deps: deps,
+                define : moduleDefine
+            });
         }
         
         
@@ -1115,18 +1131,23 @@
         }
     }
     
-    function isArray(arg) {
+    function createIsArray() {
         
         if(typeof(Array.isArray) === "function") {
             
-            return Array.isArray(arg);
+            return function(arg) {
+                return Array.isArray(arg);
+            };
         
         } else {
-        
-            return Object.prototype.toString.call(arg) === '[object Array]';
+            
+            return function(arg) {
+                return Object.prototype.toString.call(arg) === '[object Array]';
+            };
         }
     }
-
+    
+    
     function createRunnerBox(require){
 
         var attrNameToRun         = "data-run-module";
@@ -1502,9 +1523,20 @@
     
                                 //amd module starter
     function runStarter(configGlobal, require){
-
+        
+        
         var JSONParse = createJSONParser();
-
+        
+        
+        var currentScript = getCurrentScript();
+            
+        if (currentScript !== null) {
+            if (runRequire(currentScript) === true) {
+                return;
+            }
+        }
+        
+        
         var scriptList = document.getElementsByTagName('script');
 
         for (var i=0; i<scriptList.length; i++) {
@@ -1513,7 +1545,8 @@
                 return;
             }
         }
-
+        
+        
         function runRequire(node) {
 
             var map = node.getAttribute("data-static-amd-map");
@@ -1704,6 +1737,17 @@
         }
     }
     
+    
+    //https://developer.mozilla.org/pl/docs/Web/API/Document/currentScript
+    function getCurrentScript() {
+        
+        if (document.currentScript && typeof(document.currentScript.getAttribute) === "function") {
+            return document.currentScript;
+        }
+        
+        return null;
+    }
+
 }());
 
 
