@@ -1285,12 +1285,12 @@
                     
                     requestAnimationFrame(function(){
                         
-                        if (toRunnable(item) === true) {
+                        if (hasClassRunnable(item) && getObject(item).isRun() === false) {
 
                             if (module && typeof(module[moduleMethod]) === "function") {
 
                                 getObject(item).setAsRun();
-
+                                
                                 var modEval = module[moduleMethod](item);
 
                                 getObject(item).setValue(modEval);
@@ -1345,7 +1345,7 @@
 
                 item = listWidgetsRun[i];
 
-                if (isAddToExec(item) === true) {
+                if (isParentAllowToExec(item) === true) {
                     result.push(item);
                 }
             }
@@ -1360,34 +1360,46 @@
                 return isNoEmptyString(domElement.getAttribute("data-run-module"));
             }
             
-            function isAddToExec(elementTest) {
+            function isParentAllowToExec(elementTest) {
 
                 var countRecursion = 0;
 
-                return isAddToExecInner(elementTest.parentNode);
+                return isParentAllowToExecInner(elementTest.parentNode);
 
-                function isAddToExecInner(element) {
+                function isParentAllowToExecInner(element) {
 
                     countRecursion++;
 
-                    if (countRecursion > 200) {
+                    if (countRecursion > 100) {
                         recursionError();
-                        return true;
-                    }
-                    
-                    if (toRunnable(element) === true) {
                         return false;
                     }
-
+                    
+                    if (element === elementSearch) {
+                        
+                        if (hasClassRunnable(element)) {
+                            
+                            if (getObject(element).isRun() === true) {
+                                return true;
+                            } else {
+                                return false;
+                            }
+                        
+                        } else {
+                        
+                            return true;
+                        }
+                    }
+                    
                     if (element.tagName === "HTML") {
                         return true;
                     }
-
+                    
                     if (element.parentNode) {
-                        return isAddToExecInner(element.parentNode);
+                        return isParentAllowToExecInner(element.parentNode);
                     }
 
-                    return true;
+                    return false;
                 }
                 
                 function recursionError() {
@@ -1482,11 +1494,6 @@
             var value = element.getAttribute(attrNameToRun);
             
             return (typeof(value) === "string" && value !== "");
-        }
-        
-        function toRunnable(element) {
-            
-            return (hasClassRunnable(element) && getObject(element).isRun() === false);
         }
         
         function getRunModuleName(item) {
