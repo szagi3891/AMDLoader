@@ -1260,14 +1260,12 @@
         
         function runElement(domElementToRun) {
 
-            
             var list = findFromDocument(domElementToRun);
-            
             
             forEachRun(list, function(item){
                 
                 
-                var widgetName = getRunModuleName(item);
+                var widgetName = getModuleName(item);
 
 
                 var part = widgetName.split(".");
@@ -1285,7 +1283,7 @@
                     
                     requestAnimationFrame(function(){
                         
-                        if (hasClassRunnable(item) && getObject(item).isRun() === false) {
+                        if (hasAttributeToRun(item) && getObject(item).isRun() === false) {
 
                             if (module && typeof(module[moduleMethod]) === "function") {
 
@@ -1306,6 +1304,18 @@
                 });
 
             });
+            
+            function getModuleName(item) {
+
+                var widgetName = item.getAttribute(attrNameToRun);
+
+                if (typeof(widgetName) === "string" && widgetName !== "") {
+
+                    return widgetName;
+                }
+
+                return null;
+            }
         }
         
         
@@ -1375,20 +1385,17 @@
                         return false;
                     }
                     
-                    if (element === elementSearch) {
-                        
-                        if (hasClassRunnable(element)) {
-                            
-                            if (getObject(element).isRun() === true) {
-                                return true;
-                            } else {
-                                return false;
-                            }
-                        
-                        } else {
-                        
+                    if (hasAttributeToRun(element)) {
+
+                        if (getObject(element).isRun() === true) {
                             return true;
+                        } else {
+                            return false;
                         }
+                    }
+                    
+                    if (element === elementSearch) {
+                        return true;
                     }
                     
                     if (element.tagName === "HTML") {
@@ -1479,7 +1486,7 @@
 
         function whenRun(element, callback) {
             
-            if (hasClassRunnable(element)) {
+            if (hasAttributeToRun(element)) {
                 
                 getObject(element).onReady(callback);
             
@@ -1489,24 +1496,13 @@
             }
         }
         
-        function hasClassRunnable(element) {
+        function hasAttributeToRun(element) {
             
             var value = element.getAttribute(attrNameToRun);
             
             return (typeof(value) === "string" && value !== "");
         }
         
-        function getRunModuleName(item) {
-            
-            var widgetName = item.getAttribute(attrNameToRun);
-            
-            if (typeof(widgetName) === "string" && widgetName !== "") {
-                
-                return widgetName;
-            }
-            
-            return null;
-        }
         
         function createRequestAnimationFrame() {
 
