@@ -3,7 +3,7 @@
     /*
     
     Available via the MIT or new BSD license.
-    version 2.1
+    version 2.2
     
     1  : "Config: Niepoprawna zawartość klucza 'paths'"
     2.1 : "Config: próba konfiguracji z zewnątrz"

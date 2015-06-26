@@ -3,7 +3,7 @@
     /*
     
     Available via the MIT or new BSD license.
-    version 2.1
+    version 2.2
     
     1  : "Config: Niepoprawna zawartość klucza 'paths'"
     2.1 : "Config: próba konfiguracji z zewnątrz"
@@ -1260,14 +1260,12 @@
         
         function runElement(domElementToRun) {
 
-            
             var list = findFromDocument(domElementToRun);
-            
             
             forEachRun(list, function(item){
                 
                 
-                var widgetName = getRunModuleName(item);
+                var widgetName = getModuleName(item);
 
 
                 var part = widgetName.split(".");
@@ -1285,12 +1283,12 @@
                     
                     requestAnimationFrame(function(){
                         
-                        if (toRunnable(item) === true) {
+                        if (hasAttributeToRun(item) && getObject(item).isRun() === false) {
 
                             if (module && typeof(module[moduleMethod]) === "function") {
 
                                 getObject(item).setAsRun();
-
+                                
                                 var modEval = module[moduleMethod](item);
 
                                 getObject(item).setValue(modEval);
@@ -1306,6 +1304,18 @@
                 });
 
             });
+            
+            function getModuleName(item) {
+
+                var widgetName = item.getAttribute(attrNameToRun);
+
+                if (typeof(widgetName) === "string" && widgetName !== "") {
+
+                    return widgetName;
+                }
+
+                return null;
+            }
         }
         
         
@@ -1345,7 +1355,7 @@
 
                 item = listWidgetsRun[i];
 
-                if (isAddToExec(item) === true) {
+                if (isParentAllowToExec(item) === true) {
                     result.push(item);
                 }
             }
@@ -1360,34 +1370,43 @@
                 return isNoEmptyString(domElement.getAttribute("data-run-module"));
             }
             
-            function isAddToExec(elementTest) {
+            function isParentAllowToExec(elementTest) {
 
                 var countRecursion = 0;
 
-                return isAddToExecInner(elementTest.parentNode);
+                return isParentAllowToExecInner(elementTest.parentNode);
 
-                function isAddToExecInner(element) {
+                function isParentAllowToExecInner(element) {
 
                     countRecursion++;
 
-                    if (countRecursion > 200) {
+                    if (countRecursion > 100) {
                         recursionError();
+                        return false;
+                    }
+                    
+                    if (hasAttributeToRun(element)) {
+
+                        if (getObject(element).isRun() === true) {
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    }
+                    
+                    if (element === elementSearch) {
                         return true;
                     }
                     
-                    if (toRunnable(element) === true) {
-                        return false;
-                    }
-
                     if (element.tagName === "HTML") {
                         return true;
                     }
-
+                    
                     if (element.parentNode) {
-                        return isAddToExecInner(element.parentNode);
+                        return isParentAllowToExecInner(element.parentNode);
                     }
 
-                    return true;
+                    return false;
                 }
                 
                 function recursionError() {
@@ -1467,7 +1486,7 @@
 
         function whenRun(element, callback) {
             
-            if (hasClassRunnable(element)) {
+            if (hasAttributeToRun(element)) {
                 
                 getObject(element).onReady(callback);
             
@@ -1477,29 +1496,13 @@
             }
         }
         
-        function hasClassRunnable(element) {
+        function hasAttributeToRun(element) {
             
             var value = element.getAttribute(attrNameToRun);
             
             return (typeof(value) === "string" && value !== "");
         }
         
-        function toRunnable(element) {
-            
-            return (hasClassRunnable(element) && getObject(element).isRun() === false);
-        }
-        
-        function getRunModuleName(item) {
-            
-            var widgetName = item.getAttribute(attrNameToRun);
-            
-            if (typeof(widgetName) === "string" && widgetName !== "") {
-                
-                return widgetName;
-            }
-            
-            return null;
-        }
         
         function createRequestAnimationFrame() {
 
