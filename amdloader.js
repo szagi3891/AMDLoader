@@ -1152,6 +1152,7 @@
     }
     
     
+    
     function createRunnerBox(require){
 
         var attrNameToRun         = "data-run-module";
@@ -1159,10 +1160,12 @@
         var requestAnimationFrame = createRequestAnimationFrame();
         
         return {
-            "runElement"  : runElement,
-            "whenRun"     : whenRun
+            runElement : runElement,
+            whenRun    : whenRun
         };
         
+        //TODO
+        //https://developer.mozilla.org/pl/docs/Web/JavaScript/Reference/Global_Objects/WeakMap
         
         function getObject(item) {
             
@@ -1318,7 +1321,6 @@
             }
         }
         
-        
         function forEachRun(list, callback) {
                                                     //utwórz kopię
             var copy = [];
@@ -1342,25 +1344,69 @@
         
         function findFromDocument(elementSearch) {
             
-            var listWidgetsRun = elementFindAll(elementSearch, "*[" + attrNameToRun + "]", attrNameToRun);
+            if (elementSearch === document || testParent(elementSearch, isClosestParentIsRunItemTest) === true) {
+                
+                if (isDataRunModule(elementSearch)) {
+
+                    if (getObject(elementSearch).isRun() === true) {
+                        return findChild();
+                    } else {
+                        return [elementSearch];
+                    }
+                
+                } else {
+                    return findChild();        
+                }
             
-            var result = [];
-            var item   = null;
-            
-            if (isDataRunModule(elementSearch)) {
-                result.push(elementSearch);
+            } else {
+                return [];
             }
             
-            for (var i=0; i<listWidgetsRun.length; i++) {
+            function findChild() {
+                
+                var listWidgetsRun = elementFindAll(elementSearch, "*[" + attrNameToRun + "]", attrNameToRun);
 
-                item = listWidgetsRun[i];
+                var result = [];
+                var item   = null;
 
-                if (isParentAllowToExec(item) === true) {
-                    result.push(item);
+                for (var i=0; i<listWidgetsRun.length; i++) {
+
+                    item = listWidgetsRun[i];
+
+                    if (testParent(item, isDirectChildTestItem) === true) {    //isDirectChild(item) === true) {
+                        result.push(item);
+                    }
+                }
+                
+                return result;
+            }
+            
+            function isClosestParentIsRunItemTest(element) {
+                
+                if (hasAttributeToRun(element)) {
+
+                    if (getObject(element).isRun() === true) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                }
+
+                if (element.tagName === "HTML") {
+                    return true;
                 }
             }
             
-            return result;
+            function isDirectChildTestItem(element) {
+                
+                if (element === elementSearch) {
+                    return true;
+                }
+
+                if (hasAttributeToRun(element)) {
+                    return false;
+                }
+            }
             
             function isDataRunModule(domElement) {
                 
@@ -1370,40 +1416,29 @@
                 return isNoEmptyString(domElement.getAttribute("data-run-module"));
             }
             
-            function isParentAllowToExec(elementTest) {
-
+            function testParent(elementTest, fnTest) {
+                
                 var countRecursion = 0;
+                
+                return inner(elementTest.parentNode);
 
-                return isParentAllowToExecInner(elementTest.parentNode);
-
-                function isParentAllowToExecInner(element) {
+                function inner(element) {
 
                     countRecursion++;
-
-                    if (countRecursion > 100) {
+                    
+                    if (countRecursion > 200) {
                         recursionError();
                         return false;
                     }
                     
-                    if (hasAttributeToRun(element)) {
-
-                        if (getObject(element).isRun() === true) {
-                            return true;
-                        } else {
-                            return false;
-                        }
-                    }
+                    var valueTest = fnTest(element);
                     
-                    if (element === elementSearch) {
-                        return true;
-                    }
-                    
-                    if (element.tagName === "HTML") {
-                        return true;
+                    if (valueTest === true || valueTest === false) {
+                        return valueTest;
                     }
                     
                     if (element.parentNode) {
-                        return isParentAllowToExecInner(element.parentNode);
+                        return inner(element.parentNode);
                     }
 
                     return false;
@@ -1497,7 +1532,6 @@
         }
         
         function hasAttributeToRun(element) {
-            
             var value = element.getAttribute(attrNameToRun);
             
             return (typeof(value) === "string" && value !== "");
