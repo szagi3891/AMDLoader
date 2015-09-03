@@ -3,6 +3,7 @@
     /*
     
     Available via the MIT or new BSD license.
+    see: http://github.com/szagi3891/AMDLoader for details
     version 2.2
     
     1  : "Config: Niepoprawna zawartość klucza 'paths'"
