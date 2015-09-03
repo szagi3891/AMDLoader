@@ -237,7 +237,7 @@
             
             if (valid(conf.paths)) {
 
-                scriptLoader = createScriptLoader(conf.paths, getMapCrossorigin(conf.crossorigin));
+                scriptLoader = createScriptLoader(conf.paths);
             
             } else {
                 
@@ -249,38 +249,6 @@
             logs.error(2.2);
         }
         
-                                        //konwertuje na tablicę, która posiada niepuste stringi
-                                        //(w przypadku innego typu na wyjściu funkcji pusty obiekt(mapa))
-        function getMapCrossorigin(list) {
-            
-            var ret = {};
-            
-            if (list && list.length > 0) {
-                
-                for (var i=0; i<list.length; i++) {
-                    
-                    var prop = list[i];
-                    
-                    if (isNoEmptyString(prop)) {
-                        
-                        if (prop in ret) {
-                            
-                            logs.error(22, prop);
-                        
-                        } else {
-                            
-                            ret[prop] = true;
-                        }
-                    
-                    } else {
-                        
-                        logs.error(23, prop);
-                    }
-                }
-            }
-            
-            return ret;
-        }
         
         
         function valid(paths) {
@@ -804,7 +772,7 @@
         }
     }
         
-    function createScriptLoader(configPath, crossorigin) {
+    function createScriptLoader(configPath) {
         
                                             //znaczniki script, z aktualnie ładowanymi modułami
         var loadingScriprs = {};
@@ -949,19 +917,6 @@
             }
         }
         
-                                            //sprawdzam, czy dla tej domeny włączyć nagłówek crossorigin="anonimus"
-        function isCrossorigin(path) {
-            
-            for (var prefix in crossorigin) {
-                
-                if (path.substr(0, prefix.length) === prefix) {
-                    return true;
-                }
-            }
-            
-            return false;
-        }
-        
         function appendToDom(script) {
             
             document.getElementsByTagName('head')[0].appendChild(script);
@@ -984,10 +939,6 @@
             if (ieTestBehavior === true) {
                 script.readyState = 'interactive';
             }
-            
-            if (isCrossorigin(path)) {
-                script.setAttribute("crossorigin", "anonymous");
-            }            
             
             script.onreadystatechange = onreadystatechange;
             
@@ -1015,23 +966,6 @@
                 
                 callback(script);
             }
-            
-            /*
-            crossorigin:
-            
-            http://danlimerick.wordpress.com/2014/01/18/how-to-catch-javascript-errors-with-window-onerror-even-on-chrome-and-firefox/
-            http://blog.errorception.com/2012/12/catching-cross-domain-js-errors.html
-
-            crossorigin
-            crossorigin="anonymous"
-
-            http://stackoverflow.com/questions/5913978/cryptic-script-error-reported-in-javascript-in-chrome-and-firefox
-            https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script
-            
-            
-            https://github.com/stacktracejs/stacktrace.js
-            https://cdnjs.cloudflare.com/ajax/libs/stacktrace.js/0.6.4/stacktrace.js
-            */
         }
     }
 
@@ -1152,6 +1086,7 @@
     }
     
     
+    
     function createRunnerBox(require){
 
         var attrNameToRun         = "data-run-module";
@@ -1159,10 +1094,12 @@
         var requestAnimationFrame = createRequestAnimationFrame();
         
         return {
-            "runElement"  : runElement,
-            "whenRun"     : whenRun
+            runElement : runElement,
+            whenRun    : whenRun
         };
         
+        //TODO
+        //https://developer.mozilla.org/pl/docs/Web/JavaScript/Reference/Global_Objects/WeakMap
         
         function getObject(item) {
             
@@ -1283,21 +1220,26 @@
                     
                     requestAnimationFrame(function(){
                         
+                        var message;
+                        
                         if (hasAttributeToRun(item) && getObject(item).isRun() === false) {
-
+                            
+                            getObject(item).setAsRun();
+                            
                             if (module && typeof(module[moduleMethod]) === "function") {
-
-                                getObject(item).setAsRun();
                                 
+                                item.setAttribute(attrNameToRun + "-isrun", "ok");
+                            
                                 var modEval = module[moduleMethod](item);
-
                                 getObject(item).setValue(modEval);
 
-                                item.setAttribute(attrNameToRun + "-isrun", "1");
-
                             } else {
-
-                                throw Error("Brak zdefiniowanej funkcji \"" + moduleMethod + "\" dla : " + moduleName);
+                                
+                                message = "No function \"" + moduleMethod + "\" in module : " + moduleName;
+                                
+                                item.setAttribute(attrNameToRun + "-isrun", message);
+                                
+                                throw Error(message);
                             }
                         }
                     });
@@ -1317,7 +1259,6 @@
                 return null;
             }
         }
-        
         
         function forEachRun(list, callback) {
                                                     //utwórz kopię
@@ -1342,25 +1283,69 @@
         
         function findFromDocument(elementSearch) {
             
-            var listWidgetsRun = elementFindAll(elementSearch, "*[" + attrNameToRun + "]", attrNameToRun);
+            if (elementSearch === document || testParent(elementSearch, isClosestParentIsRunItemTest) === true) {
+                
+                if (isDataRunModule(elementSearch)) {
+
+                    if (getObject(elementSearch).isRun() === true) {
+                        return findChild();
+                    } else {
+                        return [elementSearch];
+                    }
+                
+                } else {
+                    return findChild();        
+                }
             
-            var result = [];
-            var item   = null;
-            
-            if (isDataRunModule(elementSearch)) {
-                result.push(elementSearch);
+            } else {
+                return [];
             }
             
-            for (var i=0; i<listWidgetsRun.length; i++) {
+            function findChild() {
+                
+                var listWidgetsRun = elementFindAll(elementSearch, "*[" + attrNameToRun + "]", attrNameToRun);
 
-                item = listWidgetsRun[i];
+                var result = [];
+                var item   = null;
 
-                if (isParentAllowToExec(item) === true) {
-                    result.push(item);
+                for (var i=0; i<listWidgetsRun.length; i++) {
+
+                    item = listWidgetsRun[i];
+
+                    if (testParent(item, isDirectChildTestItem) === true) {    //isDirectChild(item) === true) {
+                        result.push(item);
+                    }
+                }
+                
+                return result;
+            }
+            
+            function isClosestParentIsRunItemTest(element) {
+                
+                if (hasAttributeToRun(element)) {
+
+                    if (getObject(element).isRun() === true) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                }
+
+                if (element.tagName === "HTML") {
+                    return true;
                 }
             }
             
-            return result;
+            function isDirectChildTestItem(element) {
+                
+                if (element === elementSearch) {
+                    return true;
+                }
+
+                if (hasAttributeToRun(element)) {
+                    return false;
+                }
+            }
             
             function isDataRunModule(domElement) {
                 
@@ -1370,40 +1355,29 @@
                 return isNoEmptyString(domElement.getAttribute("data-run-module"));
             }
             
-            function isParentAllowToExec(elementTest) {
-
+            function testParent(elementTest, fnTest) {
+                
                 var countRecursion = 0;
+                
+                return inner(elementTest.parentNode);
 
-                return isParentAllowToExecInner(elementTest.parentNode);
-
-                function isParentAllowToExecInner(element) {
+                function inner(element) {
 
                     countRecursion++;
-
-                    if (countRecursion > 100) {
+                    
+                    if (countRecursion > 200) {
                         recursionError();
                         return false;
                     }
                     
-                    if (hasAttributeToRun(element)) {
-
-                        if (getObject(element).isRun() === true) {
-                            return true;
-                        } else {
-                            return false;
-                        }
-                    }
+                    var valueTest = fnTest(element);
                     
-                    if (element === elementSearch) {
-                        return true;
-                    }
-                    
-                    if (element.tagName === "HTML") {
-                        return true;
+                    if (valueTest === true || valueTest === false) {
+                        return valueTest;
                     }
                     
                     if (element.parentNode) {
-                        return isParentAllowToExecInner(element.parentNode);
+                        return inner(element.parentNode);
                     }
 
                     return false;
@@ -1421,7 +1395,7 @@
         }
         
         function elementFindAll(element, selector, attribute) {
-
+            
             if (element === document) {
                 element = document.documentElement;
             }
@@ -1497,7 +1471,6 @@
         }
         
         function hasAttributeToRun(element) {
-            
             var value = element.getAttribute(attrNameToRun);
             
             return (typeof(value) === "string" && value !== "");
@@ -1557,7 +1530,7 @@
 
             if (mapAmd !== null) {
                 
-                runRequireMap(configGlobal, mapAmd, getListPreLoad(), getTimeoutStart(), getCrossorigin());
+                runRequireMap(configGlobal, mapAmd, getListPreLoad(), getTimeoutStart());
                 return true;
             }
             
@@ -1584,37 +1557,32 @@
                 }
             }
 
-            function getCrossorigin() {
-
-                var value = node.getAttribute("data-crossorigin");
-
-                if (isNoEmptyString(value)) {
-                    return value.split(",");
-                } else {
-                    return [];
-                }
-            }
-
             function isInt(value){
 
                 return (typeof(value) === 'number' && !isNaN(value) && (value === (value | 0)));
             }
         }
-
-        function runRequireMap(configGlobal, pathConfig, listPreload, timeoutStart, listCrossorigin){
+        
+        /*
+        console.time('someFunction');
+        document.querySelectorAll('*[data-run-module]')
+        console.timeEnd('someFunction');
+        */
+        
+        function runRequireMap(configGlobal, pathConfig, listPreload, timeoutStart){
             
             configGlobal({
-                paths: pathConfig,
-                crossorigin: listCrossorigin
+                paths: pathConfig
             });
             
-            var runMain = onlyOnce(main);
-            
             addEvent(window, "load", runMain);
-            addTimeoutAfterDocumentReady(runMain, timeoutStart);        //timeout, po document.ContentLoad który odpala uruchamianie
+            
+            
+                        //timeout, po document.ContentLoad który odpala uruchamianie
+            addTimeoutAfterDocumentReady(runMain, timeoutStart);
 
-            function main() {
-
+            function runMain() {
+                
                 if (listPreload.length > 0) {
                     require(listPreload, function(){});
                 }
@@ -1622,32 +1590,16 @@
                 require.runnerBox.runElement(document);
             }
         }
-
-
-        function onlyOnce(func) {
-
-            var isExec = false;
-
-            return function(){
-
-                if (isExec === false) {
-
-                    isExec = true;
-
-                    setTimeout(func, 0);
-                }
-            };
-        }
-
+        
+        
         function addTimeoutAfterDocumentReady(runFunc, time) {
-
-            var isTimeoutRun = false;
-
+            
             if (isReady()) {
                 runTimeout();
             }
             
             addEvent(document, 'DOMContentLoaded', runTimeout);
+            
             addEvent(document, 'readystatechange', function(){
                 
                 if (isReady()) {
@@ -1657,11 +1609,7 @@
             
             function runTimeout() {
 
-                if (isTimeoutRun === false) {
-
-                    isTimeoutRun = true;
-                    setTimeout(runFunc, time);
-                }
+                setTimeout(runFunc, time);
             }
 
             function isReady() {
