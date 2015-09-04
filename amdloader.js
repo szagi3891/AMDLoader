@@ -67,6 +67,7 @@
     
     47.1 "Parsowanie mapy: Zduplikowany wpis"
     47.2 "Parsowanie mapy: Problem ze sparsowaniem wpisu: "
+    48 : zaszło zdarzenie wyzwalające przetwarzanie całego dokumentu
     */
     
     
@@ -124,6 +125,7 @@
         return {
             error   : error,
             warn    : warn,
+            info    : info,
             getLogs : getLogs
         };
         
@@ -136,6 +138,10 @@
         function warn(num, caption) {
             
             push("warn", num, caption);
+        }
+        
+        function info(num, caption) {
+            push("info", num, caption);
         }
         
         function throwError(num, caption) {
@@ -168,7 +174,12 @@
             //console.warn(record);
         }
         
-        function getLogs() {
+        function getLogs(show) {
+            
+            if (show === true) {
+                showLog();
+                return;
+            }
             
             var copy = [];
             
@@ -177,6 +188,34 @@
             }
             
             return copy;
+            
+            function showLog() {
+                
+                var mapFunc = {
+                    warn : getFunc("warn"),
+                    log  : getFunc("log"),
+                    err  : getFunc("error")
+                };
+                
+                window.console.group();
+                
+                for (var i=0; i<list.length; i++) {
+                    showItem(list[i]);
+                }
+                
+                window.console.groupEnd();
+                
+                
+                function showItem(item) {
+                    mapFunc[item.type](item.num, item.caption)
+                }
+                
+                function getFunc(name) {
+                    return function(mess1, mess2) {
+                        window.console[name](mess1, mess2);
+                    };
+                }
+            }
         }
     }
     
@@ -1228,7 +1267,7 @@
                             
                             if (module && typeof(module[moduleMethod]) === "function") {
                                 
-                                item.setAttribute(attrNameToRun + "-isrun", "ok");
+                                item.setAttribute(attrNameToRun + "-isrun", "1");
                             
                                 var modEval = module[moduleMethod](item);
                                 getObject(item).setValue(modEval);
@@ -1569,18 +1608,74 @@
         console.timeEnd('someFunction');
         */
         
+        //TODO - dorzucić do logów informacje o zdarzeniach jakie zaszły
+        
         function runRequireMap(configGlobal, pathConfig, listPreload, timeoutStart){
             
             configGlobal({
                 paths: pathConfig
             });
             
-            addEvent(window, "load", runMain);
+            addEvent(window, "load", function(){
+                
+                logs.info(48, "window.load");
+                
+                runMain()
+                                            //dodatkowe zabezpieczenie
+                setTimeout(function(){
+                    
+                    logs.info(48, "window.load -> 10s");
+                    runMain();
+                
+                }, 10000);
+            });
             
             
-                        //timeout, po document.ContentLoad który odpala uruchamianie
-            addTimeoutAfterDocumentReady(runMain, timeoutStart);
+            if (documentIsComplete()) {
+                
+                logs.info(48, "isComplete");
+                runMain();
+            }
+            
+            if (documentIsLoaded()) {
+                
+                logs.info(48, "isLoaded");
+                runTimeout();
+            }
+            
+            addEvent(document, 'DOMContentLoaded', function(){
+                
+                logs.info(48, "DOMContentLoaded");
+                runTimeout();
+                
+                //http://www.w3schools.com/jsref/event_onpageshow.asp
+                addEvent(document.getElementsByTagName('body')[0], 'pageshow', function(){
+                    
+                    logs.info(48, "body pageshow");
+                    runMain();
+                });
+            });
+            
+            addEvent(document, 'readystatechange', function(){
+                
+                var message = "readystatechange - " + document.readyState;
+                
+                if (documentIsComplete() || documentIsLoaded()) {
+                    
+                    logs.info(48, message + " - exec");
+                    runTimeout();
+                
+                } else {
+                    
+                    logs.info(48, message + " - noexec");
+                }
+            });
+            
+            function runTimeout() {
 
+                setTimeout(runMain, timeoutStart);
+            }
+            
             function runMain() {
                 
                 if (listPreload.length > 0) {
@@ -1589,32 +1684,13 @@
 
                 require.runnerBox.runElement(document);
             }
-        }
-        
-        
-        function addTimeoutAfterDocumentReady(runFunc, time) {
             
-            if (isReady()) {
-                runTimeout();
+            function documentIsComplete() {
+                return document.readyState === "complete";
             }
             
-            addEvent(document, 'DOMContentLoaded', runTimeout);
-            
-            addEvent(document, 'readystatechange', function(){
-                
-                if (isReady()) {
-                    runTimeout();
-                }
-            });
-            
-            function runTimeout() {
-
-                setTimeout(runFunc, time);
-            }
-
-            function isReady() {
-
-                return (document.readyState === "complete" || document.readyState === "loaded");
+            function documentIsLoaded() {
+                return document.readyState === "loaded";
             }
         }
         
