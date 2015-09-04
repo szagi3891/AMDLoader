@@ -167,7 +167,8 @@
             var record = {
                 type    : "warn",
                 num     : num,
-                caption : caption
+                caption : caption,
+                time    : new Date()
             };
             
             list.push(record);
@@ -208,12 +209,19 @@
                 
                 
                 function showItem(item) {
-                    mapFunc[item.type](item.num, item.caption)
+                    
+                    var hours      = item.time.getHours();
+                    var minutes    = item.time.getMinutes();
+                    var seconds    = item.time.getSeconds();
+
+                    var timeFormat = hours + ':' + minutes + ':' + seconds;
+                    
+                    mapFunc[item.type](timeFormat, item.num, item.caption)
                 }
                 
                 function getFunc(name) {
-                    return function(mess1, mess2) {
-                        window.console[name](mess1, mess2);
+                    return function(mess1, mess2, mess3) {
+                        window.console[name](mess1, mess2, mess3);
                     };
                 }
             }
@@ -563,7 +571,7 @@
                         }
                     }
                     
-                                                            //dopiero w tym miejscu musimy zaznaczyć tą flagę
+                                                            //dopiero w tym miejscu musimy zaznaczyć tą flagę
                     isExec = true;
                     
                                                             //dozwolone jest wywołanie bez funkcji zwrotnej
