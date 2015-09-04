@@ -69,6 +69,7 @@
     47.1 "Parsowanie mapy: Zduplikowany wpis"
     47.2 "Parsowanie mapy: Problem ze sparsowaniem wpisu: "
     48 : zaszło zdarzenie wyzwalające przetwarzanie całego dokumentu
+    49 : wywołano define, zanim zaszło pierwsze żadanie o dynamiczny zasób
     */
     
     
@@ -401,8 +402,10 @@
     
     function createModuleList() {
         
-        var list          = {};    //lista z modułami
-        var waitingDefine = [];    //to co wpadło za pomocą funkcji define, wpada na tąże listę
+        var isFirstRequire = false;
+        
+        var list           = {};    //lista z modułami
+        var waitingDefine  = [];    //to co wpadło za pomocą funkcji define, wpada na tąże listę
         
         return {
 
@@ -585,6 +588,8 @@
         
         function requireOne(path, callback) {
             
+            isFirstRequire = true;
+            
             var fullPath = scriptLoader.resolvePath(path, "js", true);
             
             if (fullPath in list) {
@@ -635,6 +640,18 @@
             
             
             var currentScript = getCurrentScript();
+            
+            
+            if (isFirstRequire !== true) {
+            
+                if (currentScript === null) {
+                    logs.error(49, "");
+                } else {
+                    logs.error(49, getCurrentScript().getAttribute("src"));
+                }
+                
+                return;
+            }
             
             if (currentScript !== null) {
                 
@@ -802,7 +819,7 @@
 
             } else {
                 
-                logs.warn(15, nameModule);
+                logs.error(15, nameModule);
             }
         }
         
