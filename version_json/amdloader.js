@@ -645,9 +645,9 @@
             if (isFirstRequire !== true) {
             
                 if (currentScript === null) {
-                    logs.error(49, "");
+                    logs.warn(49, "");
                 } else {
-                    logs.error(49, getCurrentScript().getAttribute("src"));
+                    logs.warn(49, getCurrentScript().getAttribute("src"));
                 }
                 
                 return;
