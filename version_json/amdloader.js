@@ -3,7 +3,8 @@
     /*
     
     Available via the MIT or new BSD license.
-    version 2.1
+    see: http://github.com/szagi3891/AMDLoader for details
+    version 2.2
     
     1  : "Config: Niepoprawna zawartość klucza 'paths'"
     2.1 : "Config: próba konfiguracji z zewnątrz"
@@ -67,6 +68,8 @@
     
     47.1 "Parsowanie mapy: Zduplikowany wpis"
     47.2 "Parsowanie mapy: Problem ze sparsowaniem wpisu: "
+    48 : zaszło zdarzenie wyzwalające przetwarzanie całego dokumentu
+    49 : wywołano define, zanim zaszło pierwsze żadanie o dynamiczny zasób
     */
     
     
@@ -124,6 +127,7 @@
         return {
             error   : error,
             warn    : warn,
+            info    : info,
             getLogs : getLogs
         };
         
@@ -136,6 +140,10 @@
         function warn(num, caption) {
             
             push("warn", num, caption);
+        }
+        
+        function info(num, caption) {
+            push("info", num, caption);
         }
         
         function throwError(num, caption) {
@@ -160,7 +168,8 @@
             var record = {
                 type    : "warn",
                 num     : num,
-                caption : caption
+                caption : caption,
+                time    : new Date()
             };
             
             list.push(record);
@@ -168,7 +177,12 @@
             //console.warn(record);
         }
         
-        function getLogs() {
+        function getLogs(show) {
+            
+            if (show === true) {
+                showLog();
+                return;
+            }
             
             var copy = [];
             
@@ -177,6 +191,41 @@
             }
             
             return copy;
+            
+            function showLog() {
+                
+                var mapFunc = {
+                    warn : getFunc("warn"),
+                    log  : getFunc("log"),
+                    err  : getFunc("error")
+                };
+                
+                window.console.group();
+                
+                for (var i=0; i<list.length; i++) {
+                    showItem(list[i]);
+                }
+                
+                window.console.groupEnd();
+                
+                
+                function showItem(item) {
+                    
+                    var hours      = item.time.getHours();
+                    var minutes    = item.time.getMinutes();
+                    var seconds    = item.time.getSeconds();
+
+                    var timeFormat = hours + ':' + minutes + ':' + seconds;
+                    
+                    mapFunc[item.type](timeFormat, item.num, item.caption)
+                }
+                
+                function getFunc(name) {
+                    return function(mess1, mess2, mess3) {
+                        window.console[name](mess1, mess2, mess3);
+                    };
+                }
+            }
         }
     }
     
@@ -237,7 +286,7 @@
             
             if (valid(conf.paths)) {
 
-                scriptLoader = createScriptLoader(conf.paths, getMapCrossorigin(conf.crossorigin));
+                scriptLoader = createScriptLoader(conf.paths);
             
             } else {
                 
@@ -249,38 +298,6 @@
             logs.error(2.2);
         }
         
-                                        //konwertuje na tablicę, która posiada niepuste stringi
-                                        //(w przypadku innego typu na wyjściu funkcji pusty obiekt(mapa))
-        function getMapCrossorigin(list) {
-            
-            var ret = {};
-            
-            if (list && list.length > 0) {
-                
-                for (var i=0; i<list.length; i++) {
-                    
-                    var prop = list[i];
-                    
-                    if (isNoEmptyString(prop)) {
-                        
-                        if (prop in ret) {
-                            
-                            logs.error(22, prop);
-                        
-                        } else {
-                            
-                            ret[prop] = true;
-                        }
-                    
-                    } else {
-                        
-                        logs.error(23, prop);
-                    }
-                }
-            }
-            
-            return ret;
-        }
         
         
         function valid(paths) {
@@ -385,8 +402,10 @@
     
     function createModuleList() {
         
-        var list          = {};    //lista z modułami
-        var waitingDefine = [];    //to co wpadło za pomocą funkcji define, wpada na tąże listę
+        var isFirstRequire = false;
+        
+        var list           = {};    //lista z modułami
+        var waitingDefine  = [];    //to co wpadło za pomocą funkcji define, wpada na tąże listę
         
         return {
 
@@ -555,7 +574,7 @@
                         }
                     }
                     
-                                                            //dopiero w tym miejscu musimy zaznaczyć tą flagę
+                                                            //dopiero w tym miejscu musimy zaznaczyć tą flagę
                     isExec = true;
                     
                                                             //dozwolone jest wywołanie bez funkcji zwrotnej
@@ -568,6 +587,8 @@
         
         
         function requireOne(path, callback) {
+            
+            isFirstRequire = true;
             
             var fullPath = scriptLoader.resolvePath(path, "js", true);
             
@@ -619,6 +640,18 @@
             
             
             var currentScript = getCurrentScript();
+            
+            
+            if (isFirstRequire !== true) {
+            
+                if (currentScript === null) {
+                    logs.warn(49, "");
+                } else {
+                    logs.warn(49, getCurrentScript().getAttribute("src"));
+                }
+                
+                return;
+            }
             
             if (currentScript !== null) {
                 
@@ -786,7 +819,7 @@
 
             } else {
                 
-                logs.warn(15, nameModule);
+                logs.error(15, nameModule);
             }
         }
         
@@ -804,7 +837,7 @@
         }
     }
         
-    function createScriptLoader(configPath, crossorigin) {
+    function createScriptLoader(configPath) {
         
                                             //znaczniki script, z aktualnie ładowanymi modułami
         var loadingScriprs = {};
@@ -949,19 +982,6 @@
             }
         }
         
-                                            //sprawdzam, czy dla tej domeny włączyć nagłówek crossorigin="anonimus"
-        function isCrossorigin(path) {
-            
-            for (var prefix in crossorigin) {
-                
-                if (path.substr(0, prefix.length) === prefix) {
-                    return true;
-                }
-            }
-            
-            return false;
-        }
-        
         function appendToDom(script) {
             
             document.getElementsByTagName('head')[0].appendChild(script);
@@ -984,10 +1004,6 @@
             if (ieTestBehavior === true) {
                 script.readyState = 'interactive';
             }
-            
-            if (isCrossorigin(path)) {
-                script.setAttribute("crossorigin", "anonymous");
-            }            
             
             script.onreadystatechange = onreadystatechange;
             
@@ -1015,23 +1031,6 @@
                 
                 callback(script);
             }
-            
-            /*
-            crossorigin:
-            
-            http://danlimerick.wordpress.com/2014/01/18/how-to-catch-javascript-errors-with-window-onerror-even-on-chrome-and-firefox/
-            http://blog.errorception.com/2012/12/catching-cross-domain-js-errors.html
-
-            crossorigin
-            crossorigin="anonymous"
-
-            http://stackoverflow.com/questions/5913978/cryptic-script-error-reported-in-javascript-in-chrome-and-firefox
-            https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script
-            
-            
-            https://github.com/stacktracejs/stacktrace.js
-            https://cdnjs.cloudflare.com/ajax/libs/stacktrace.js/0.6.4/stacktrace.js
-            */
         }
     }
 
@@ -1152,6 +1151,7 @@
     }
     
     
+    
     function createRunnerBox(require){
 
         var attrNameToRun         = "data-run-module";
@@ -1159,10 +1159,12 @@
         var requestAnimationFrame = createRequestAnimationFrame();
         
         return {
-            "runElement"  : runElement,
-            "whenRun"     : whenRun
+            runElement : runElement,
+            whenRun    : whenRun
         };
         
+        //TODO
+        //https://developer.mozilla.org/pl/docs/Web/JavaScript/Reference/Global_Objects/WeakMap
         
         function getObject(item) {
             
@@ -1260,14 +1262,12 @@
         
         function runElement(domElementToRun) {
 
-            
             var list = findFromDocument(domElementToRun);
-            
             
             forEachRun(list, function(item){
                 
                 
-                var widgetName = getRunModuleName(item);
+                var widgetName = getModuleName(item);
 
 
                 var part = widgetName.split(".");
@@ -1285,29 +1285,45 @@
                     
                     requestAnimationFrame(function(){
                         
-                        if (toRunnable(item) === true) {
-
+                        var message;
+                        
+                        if (hasAttributeToRun(item) && getObject(item).isRun() === false) {
+                            
+                            getObject(item).setAsRun();
+                            
                             if (module && typeof(module[moduleMethod]) === "function") {
-
-                                getObject(item).setAsRun();
-
+                                
+                                item.setAttribute(attrNameToRun + "-isrun", "1");
+                            
                                 var modEval = module[moduleMethod](item);
-
                                 getObject(item).setValue(modEval);
 
-                                item.setAttribute(attrNameToRun + "-isrun", "1");
-
                             } else {
-
-                                throw Error("Brak zdefiniowanej funkcji \"" + moduleMethod + "\" dla : " + moduleName);
+                                
+                                message = "No function \"" + moduleMethod + "\" in module : " + moduleName;
+                                
+                                item.setAttribute(attrNameToRun + "-isrun", message);
+                                
+                                throw Error(message);
                             }
                         }
                     });
                 });
 
             });
+            
+            function getModuleName(item) {
+
+                var widgetName = item.getAttribute(attrNameToRun);
+
+                if (typeof(widgetName) === "string" && widgetName !== "") {
+
+                    return widgetName;
+                }
+
+                return null;
+            }
         }
-        
         
         function forEachRun(list, callback) {
                                                     //utwórz kopię
@@ -1332,25 +1348,69 @@
         
         function findFromDocument(elementSearch) {
             
-            var listWidgetsRun = elementFindAll(elementSearch, "*[" + attrNameToRun + "]", attrNameToRun);
+            if (elementSearch === document || testParent(elementSearch, isClosestParentIsRunItemTest) === true) {
+                
+                if (isDataRunModule(elementSearch)) {
+
+                    if (getObject(elementSearch).isRun() === true) {
+                        return findChild();
+                    } else {
+                        return [elementSearch];
+                    }
+                
+                } else {
+                    return findChild();        
+                }
             
-            var result = [];
-            var item   = null;
-            
-            if (isDataRunModule(elementSearch)) {
-                result.push(elementSearch);
+            } else {
+                return [];
             }
             
-            for (var i=0; i<listWidgetsRun.length; i++) {
+            function findChild() {
+                
+                var listWidgetsRun = elementFindAll(elementSearch, "*[" + attrNameToRun + "]", attrNameToRun);
 
-                item = listWidgetsRun[i];
+                var result = [];
+                var item   = null;
 
-                if (isAddToExec(item) === true) {
-                    result.push(item);
+                for (var i=0; i<listWidgetsRun.length; i++) {
+
+                    item = listWidgetsRun[i];
+
+                    if (testParent(item, isDirectChildTestItem) === true) {    //isDirectChild(item) === true) {
+                        result.push(item);
+                    }
+                }
+                
+                return result;
+            }
+            
+            function isClosestParentIsRunItemTest(element) {
+                
+                if (hasAttributeToRun(element)) {
+
+                    if (getObject(element).isRun() === true) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                }
+
+                if (element.tagName === "HTML") {
+                    return true;
                 }
             }
             
-            return result;
+            function isDirectChildTestItem(element) {
+                
+                if (element === elementSearch) {
+                    return true;
+                }
+
+                if (hasAttributeToRun(element)) {
+                    return false;
+                }
+            }
             
             function isDataRunModule(domElement) {
                 
@@ -1360,34 +1420,32 @@
                 return isNoEmptyString(domElement.getAttribute("data-run-module"));
             }
             
-            function isAddToExec(elementTest) {
-
+            function testParent(elementTest, fnTest) {
+                
                 var countRecursion = 0;
+                
+                return inner(elementTest.parentNode);
 
-                return isAddToExecInner(elementTest.parentNode);
-
-                function isAddToExecInner(element) {
+                function inner(element) {
 
                     countRecursion++;
-
+                    
                     if (countRecursion > 200) {
                         recursionError();
-                        return true;
-                    }
-                    
-                    if (toRunnable(element) === true) {
                         return false;
                     }
-
-                    if (element.tagName === "HTML") {
-                        return true;
+                    
+                    var valueTest = fnTest(element);
+                    
+                    if (valueTest === true || valueTest === false) {
+                        return valueTest;
                     }
-
+                    
                     if (element.parentNode) {
-                        return isAddToExecInner(element.parentNode);
+                        return inner(element.parentNode);
                     }
 
-                    return true;
+                    return false;
                 }
                 
                 function recursionError() {
@@ -1402,7 +1460,7 @@
         }
         
         function elementFindAll(element, selector, attribute) {
-
+            
             if (element === document) {
                 element = document.documentElement;
             }
@@ -1467,7 +1525,7 @@
 
         function whenRun(element, callback) {
             
-            if (hasClassRunnable(element)) {
+            if (hasAttributeToRun(element)) {
                 
                 getObject(element).onReady(callback);
             
@@ -1477,29 +1535,12 @@
             }
         }
         
-        function hasClassRunnable(element) {
-            
+        function hasAttributeToRun(element) {
             var value = element.getAttribute(attrNameToRun);
             
             return (typeof(value) === "string" && value !== "");
         }
         
-        function toRunnable(element) {
-            
-            return (hasClassRunnable(element) && getObject(element).isRun() === false);
-        }
-        
-        function getRunModuleName(item) {
-            
-            var widgetName = item.getAttribute(attrNameToRun);
-            
-            if (typeof(widgetName) === "string" && widgetName !== "") {
-                
-                return widgetName;
-            }
-            
-            return null;
-        }
         
         function createRequestAnimationFrame() {
 
@@ -1554,7 +1595,7 @@
 
             if (mapAmd !== null) {
                 
-                runRequireMap(configGlobal, mapAmd, getListPreLoad(), getTimeoutStart(), getCrossorigin());
+                runRequireMap(configGlobal, mapAmd, getListPreLoad(), getTimeoutStart());
                 return true;
             }
             
@@ -1581,89 +1622,101 @@
                 }
             }
 
-            function getCrossorigin() {
-
-                var value = node.getAttribute("data-crossorigin");
-
-                if (isNoEmptyString(value)) {
-                    return value.split(",");
-                } else {
-                    return [];
-                }
-            }
-
             function isInt(value){
 
                 return (typeof(value) === 'number' && !isNaN(value) && (value === (value | 0)));
             }
         }
-
-        function runRequireMap(configGlobal, pathConfig, listPreload, timeoutStart, listCrossorigin){
+        
+        /*
+        console.time('someFunction');
+        document.querySelectorAll('*[data-run-module]')
+        console.timeEnd('someFunction');
+        */
+        
+        //TODO - dorzucić do logów informacje o zdarzeniach jakie zaszły
+        
+        function runRequireMap(configGlobal, pathConfig, listPreload, timeoutStart){
             
             configGlobal({
-                paths: pathConfig,
-                crossorigin: listCrossorigin
+                paths: pathConfig
             });
             
-            var runMain = onlyOnce(main);
+            addEvent(window, "load", function(){
+                
+                logs.info(48, "window.load");
+                
+                runMain()
+                                            //dodatkowe zabezpieczenie
+                setTimeout(function(){
+                    
+                    logs.info(48, "window.load -> 10s");
+                    runMain();
+                
+                }, 10000);
+            });
             
-            addEvent(window, "load", runMain);
-            addTimeoutAfterDocumentReady(runMain, timeoutStart);        //timeout, po document.ContentLoad który odpala uruchamianie
+            
+            if (documentIsComplete()) {
+                
+                logs.info(48, "isComplete");
+                runMain();
+            }
+            
+            if (documentIsLoaded()) {
+                
+                logs.info(48, "isLoaded");
+                runTimeout();
+            }
+            
+            addEvent(document, 'DOMContentLoaded', function(){
+                
+                logs.info(48, "DOMContentLoaded");
+                runTimeout();
+                
+                //http://www.w3schools.com/jsref/event_onpageshow.asp
+                addEvent(document.getElementsByTagName('body')[0], 'pageshow', function(){
+                    
+                    logs.info(48, "body pageshow");
+                    runMain();
+                });
+            });
+            
+            addEvent(document, 'readystatechange', function(){
+                
+                var message = "readystatechange - " + document.readyState;
+                
+                if (documentIsComplete() || documentIsLoaded()) {
+                    
+                    logs.info(48, message + " - exec");
+                    runTimeout();
+                
+                } else {
+                    
+                    logs.info(48, message + " - noexec");
+                }
+            });
+            
+            function runTimeout() {
 
-            function main() {
-
+                setTimeout(runMain, timeoutStart);
+            }
+            
+            function runMain() {
+                
                 if (listPreload.length > 0) {
                     require(listPreload, function(){});
                 }
 
                 require.runnerBox.runElement(document);
             }
-        }
-
-
-        function onlyOnce(func) {
-
-            var isExec = false;
-
-            return function(){
-
-                if (isExec === false) {
-
-                    isExec = true;
-
-                    setTimeout(func, 0);
-                }
-            };
-        }
-
-        function addTimeoutAfterDocumentReady(runFunc, time) {
-
-            var isTimeoutRun = false;
-
-            if (isReady()) {
-                runTimeout();
+            
+            function documentIsComplete() {
+                return document.readyState === "complete";
             }
             
-            addEvent(document, 'DOMContentLoaded', runTimeout);
-            addEvent(document, 'readystatechange', function(){
-                
-                if (isReady()) {
-                    runTimeout();
-                }
-            });
-            
-            function runTimeout() {
-
-                if (isTimeoutRun === false) {
-
-                    isTimeoutRun = true;
-                    setTimeout(runFunc, time);
-                }
-            }
-
-            function isReady() {
-
-                return (document.readyState === "complete" || document.readyState === "loaded");
+            function documentIsLoaded() {
+                return document.readyState === "loaded";
             }
         }
         

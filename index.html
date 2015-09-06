@@ -9,7 +9,6 @@
     <!--
     opcjonalne:
     data-timeout-start="2000"
-    data-crossorigin="js/lib1"
     -->
     
 </head>
@@ -22,7 +21,13 @@
     
     <div data-run-module="lib/box.renderTime" data-color="blue">module2</div>
     
-    <div data-run-module="lib2/box2.renderBox2" data-param="jakieś dodatkowe parametry"></div>
+    <div data-run-module="lib2/box2.renderBox2" data-param="jakieś dodatkowe parametry"
+         style="height: 50px;width: 50px;background-color: red"
+         >
+        <div data-run-module="lib2/box2.submodule"></div>
+    </div>
+    
+    <div data-run-module="lib2/box2.renderBoxErrr"></div>
 </body>
 
 </html>
