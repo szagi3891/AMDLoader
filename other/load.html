@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <meta charset="utf-8" />
+    
+    <!--
+    <script type="text/javascript" src="../amdloader.js" data-amd-map="lib:js/lib1 lib2:js/lib1"></script>
+    -->
+    
+</head>
+<body>
+    
+    <div id="initContent">
+
+        <div class="otherComponentType" data-init="false">
+            jakiś niezależny zewnętrzny komponent
+        </div>
+		
+		
+        <script type="text/javascript">
+
+            ((function(baseDir, className, callback) {
+                
+                console.info("pocz ...");
+				
+                
+                if (typeof(window.require) === "function") {
+                    createLoader(window.require);
+
+                } else {
+
+                    loadScript("../amdloader.js", function(){
+                        createLoader(window.require);
+                    });
+                }
+                
+                function createLoader(requireLocal) {
+                    
+                    var item = document.querySelector('*[data-init="false"]');
+                    
+                    if (item === null) {
+                        
+                    } else {
+                        
+                        item.setAttribute('data-init', 'true');
+                        
+                        callback({
+                            get : get
+                        }, item);
+                        
+                                                    //wyszukaj następny element
+                        setTimeout(function(){
+                            
+                            createLoader(requireLocal);
+                        }, 0);
+                    }
+                    
+                    
+                    function get(list, callback) {
+
+                        var newList = [];
+
+                        for (var i=0; i<list.length; i++) {
+                            newList.push(baseDir + "/" + list[i]);
+                        }
+
+                        requireLocal(newList, callback);
+                    }
+                }
+
+                function loadScript(path, callback) {
+
+                    var isExec    = false;                    
+                    var script    = document.createElement('script');
+
+                    script.type   = 'text/javascript';
+                    script.src    = path;
+                    script.onload = runCallback;
+                    script.async  = true;
+                    script.defer  = true;
+
+                    script.setAttribute("data-amd-map", "");
+
+                    script.onreadystatechange = onreadystatechange;
+
+                    appendToDom(script);
+
+                    function onreadystatechange() {
+
+                        if (script.readyState === 'loaded' || script.readyState === 'complete') {
+                            runCallback();
+                        }
+                    }
+
+                    function runCallback() {
+
+                        if (isExec === true) {
+                            return;
+                        }
+
+                        isExec = true;
+
+                        callback(script);
+                    }
+
+                    function appendToDom(script) {
+
+                        document.getElementsByTagName('head')[0].appendChild(script);
+                    }
+                }
+			
+			
+            })("../js/libother", "otherComponentType", function(loader, contenter){
+				
+                                        //trzeba by dorzucić fukncję która będzie czekała na window.load ...
+                
+                                        //wskazanie bazowego katalogu w którym znajdują się moduły
+                loader.get(["main"], function(main){
+                    
+                    main.render(loader, contenter);
+                });
+            
+            }));
+
+        </script>
+    </div>
+    
+    
+    
+    
+    
+    <button id="doczytaj">Doczytaj ajaxem kolejną instancję ...</button>
+	
+    
+    <script type="text/javascript">
+        
+        (function(){
+            
+            doczytaj.onclick = click;
+            
+            function click(){
+
+				var src = "http://ocdn.eu/static/template-engine/ODE7MDA_/9d50327b5ec7c20e377e229fd50fab14/build/jquery-1.11.2/jquery.js";
+
+				require([src], function($) {
+
+					$.ajax({
+						url: "loadAjax.html",
+						success: function(responseText) {
+
+							var div = document.createElement("div");
+							div.innerHTML = responseText;
+
+							document.body.appendChild(div);
+
+
+							//$("#response-div").html(responseText);
+							$(div).find("script").each(function(i) {
+								eval($(this).text());
+							});
+						}
+					});
+				});
+			}
+			
+			function click() {
+				
+				var data = {};
+				
+				picoajax({
+					method: "GET",
+					url: "loadAjax.html",
+					data: data,
+					success: success,
+					failure: failure
+				});   
+
+				function success(text, xhr) {
+
+					var div = document.createElement("div");
+					div.innerHTML = text;
+					
+					document.body.appendChild(div);
+					
+					execScriptInNode(div);
+				}
+
+				function failure(xhr) {
+					console.info("failure", xhr.status, xhr);
+				}
+            }
+            
+            function picoajax(req) {
+
+                req.method = req.method ? req.method.toUpperCase() : "GET";
+                var xhr = window.ActiveXObject ? new window.ActiveXObject("Microsoft.XMLHTTP") : new window.XMLHttpRequest();
+                this.stateChange = function () {
+                    xhr.readyState === 4 && (xhr.status >= 200 && xhr.status < 300 ? req.success && req.success(xhr.responseText, xhr) : req.failure && req.failure(xhr));
+                }, xhr.onreadystatechange = this.stateChange;
+                if (typeof req.data === "object") {
+                    var t = "";
+                    for (var v in req.data) { t += (t.length > 0 ? "&" : "") + encodeURIComponent(v) + "=" + encodeURIComponent(req.data[v]); }
+                    req.data = t;
+                }
+                req.method !== "POST" && req.data && (req.url = req.url + "?" + req.data), xhr.open(req.method, req.url, !0), req.method === "POST" ? (xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded"), xhr.send(req.data ? req.data : null)) : xhr.send()
+            }
+			
+			function execScriptInNode(div) {
+				
+				var src = "http://ocdn.eu/static/template-engine/ODE7MDA_/9d50327b5ec7c20e377e229fd50fab14/build/jquery-1.11.2/jquery.js";
+				
+				require([src], function($) {
+					
+					$(div).find("script").each(function(i) {
+						eval($(this).text());
+					});
+				});
+			}
+			
+        }());
+    </script>
+    
+    
+</body>
+    
+</html>

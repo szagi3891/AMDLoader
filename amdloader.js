@@ -284,14 +284,7 @@
 
         if (scriptLoader === null) {
             
-            if (valid(conf.paths)) {
-
-                scriptLoader = createScriptLoader(conf.paths);
-            
-            } else {
-                
-                logs.error(1);
-            }
+            scriptLoader = createScriptLoader(conf.paths);
 
         } else {
             
@@ -868,14 +861,16 @@
         
         function resolvePath(path, extension, errReport) {
             
+            
             if (path.length > 0 && path[0] === ".") {
                 
                 if (errReport === true) {
-                    logs.error(16, path);
+                    logs.warn(16, path);
                 }
-            
-                return;
+                
+                return path + "." + extension;
             }
+            
             
             if (path.substr(0, 8) === "https://") {
                 
@@ -1725,6 +1720,10 @@
         function mapParser(node) {
             
             var data = node.getAttribute("data-amd-map");
+            
+            if (data === "") {
+                return {};
+            }
             
             if (isNoEmptyString(data) === false) {
                 return null;

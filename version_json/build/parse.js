@@ -2,6 +2,10 @@
             
             var data = node.getAttribute("data-static-amd-map");
             
+            if (data === ""){
+                return {};
+            }
+            
             if (typeof(data) === "string" && data !== "") {
             } else {
                 return null;

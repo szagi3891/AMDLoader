@@ -1,0 +1,115 @@
+
+        <div class="otherComponentType" data-init="false">
+            jakiś niezależny zewnętrzny komponent
+        </div>
+		
+		
+        <script type="text/javascript">
+			
+			console.info("doczytano ajaxem ten komponent");
+			
+
+            ((function(baseDir, className, callback) {
+                
+                console.info("pocz ...");
+				
+                
+                if (typeof(window.require) === "function") {
+                    createLoader(window.require);
+
+                } else {
+
+                    loadScript("../amdloader.js", function(){
+                        createLoader(window.require);
+                    });
+                }
+                
+                function createLoader(requireLocal) {
+                    
+                    var item = document.querySelector('*[data-init="false"]');
+                    
+                    if (item === null) {
+                        
+                    } else {
+                        
+                        item.setAttribute('data-init', 'true');
+                        
+                        callback({
+                            get : get
+                        }, item);
+                        
+                                                    //wyszukaj następny element
+                        setTimeout(function(){
+                            
+                            createLoader(requireLocal);
+                        }, 0);
+                    }
+                    
+                    
+                    function get(list, callback) {
+
+                        var newList = [];
+
+                        for (var i=0; i<list.length; i++) {
+                            newList.push(baseDir + "/" + list[i]);
+                        }
+
+                        requireLocal(newList, callback);
+                    }
+                }
+
+                function loadScript(path, callback) {
+
+                    var isExec    = false;                    
+                    var script    = document.createElement('script');
+
+                    script.type   = 'text/javascript';
+                    script.src    = path;
+                    script.onload = runCallback;
+                    script.async  = true;
+                    script.defer  = true;
+
+                    script.setAttribute("data-amd-map", "");
+
+                    script.onreadystatechange = onreadystatechange;
+
+                    appendToDom(script);
+
+                    function onreadystatechange() {
+
+                        if (script.readyState === 'loaded' || script.readyState === 'complete') {
+                            runCallback();
+                        }
+                    }
+
+                    function runCallback() {
+
+                        if (isExec === true) {
+                            return;
+                        }
+
+                        isExec = true;
+
+                        callback(script);
+                    }
+
+                    function appendToDom(script) {
+
+                        document.getElementsByTagName('head')[0].appendChild(script);
+                    }
+                }
+			
+			
+            })("../js/libother", "otherComponentType", function(loader, contenter){
+				
+                                        //trzeba by dorzucić fukncję która będzie czekała na window.load ...
+                
+                                        //wskazanie bazowego katalogu w którym znajdują się moduły
+                loader.get(["main"], function(main){
+                    
+                    main.render(loader, contenter);
+                });
+            
+            }));
+
+        </script>
