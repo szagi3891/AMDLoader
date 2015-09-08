@@ -1,10 +1,4 @@
-        function mapParser(node) {
-            
-            var data = node.getAttribute("data-static-amd-map");
-            
-            if (data === ""){
-                return {};
-            }
+        function mapParser(data) {
             
             if (typeof(data) === "string" && data !== "") {
             } else {

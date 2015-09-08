@@ -290,24 +290,6 @@
             
             logs.error(2.2);
         }
-        
-        
-        
-        function valid(paths) {
-            
-            var count = 0;
-            
-            for (var prop in paths) {
-                
-                if (isNoEmptyString(paths[prop])) {
-                    count++;
-                }
-            }
-
-            if (count > 0) {
-                return true;
-            }
-        }
     }
 
     function requireGlobal(deps, callback) {
@@ -861,16 +843,16 @@
         
         function resolvePath(path, extension, errReport) {
             
-            
+			
             if (path.length > 0 && path[0] === ".") {
                 
                 if (errReport === true) {
-                    logs.warn(16, path);
+                    logs.error(16, path);
                 }
-                
-                return path + "." + extension;
-            }
             
+                return;
+            }
+			
             
             if (path.substr(0, 8) === "https://") {
                 
@@ -1585,15 +1567,28 @@
         
         function runRequire(node) {
 
-            
-            var mapAmd = mapParser(node);
+            var data   = node.getAttribute("data-amd-map");
+			var mapAmd = null;
+			
+			if (isNoEmptyString(data)) {
+				
+				mapAmd = mapParser(data);
 
-            if (mapAmd !== null) {
-                
-                runRequireMap(configGlobal, mapAmd, getListPreLoad(), getTimeoutStart());
+				if (mapAmd !== null) {
+
+					runRequireMap(configGlobal, mapAmd, getListPreLoad(), getTimeoutStart());
+					return true;
+				
+				} else {
+					
+				}
+
+			} else {
+							//biblioteka wykorzystywana do dociągania stałych zasobów
+				runRequireMap(configGlobal, {}, getListPreLoad(), getTimeoutStart());
                 return true;
-            }
-            
+			}
+			
             
             function getListPreLoad() {
 
@@ -1717,13 +1712,7 @@
         
         
 //parseFuncBeginForBuilder
-        function mapParser(node) {
-            
-            var data = node.getAttribute("data-amd-map");
-            
-            if (data === "") {
-                return {};
-            }
+        function mapParser(data) {
             
             if (isNoEmptyString(data) === false) {
                 return null;
