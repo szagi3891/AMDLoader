@@ -1566,27 +1566,17 @@
         
         
         function runRequire(node) {
+            
+            var mapAmd = mapParser(node);
+            
+            if (mapAmd !== null) {
 
-            var data   = node.getAttribute("data-amd-map");
-			var mapAmd = null;
-			
-			if (isNoEmptyString(data)) {
-				
-				mapAmd = mapParser(data);
-
-				if (mapAmd !== null) {
-
-					runRequireMap(configGlobal, mapAmd, getListPreLoad(), getTimeoutStart());
-					return true;
-				
-				} else {
-					
-				}
-
-			} else {
-							//biblioteka wykorzystywana do dociągania stałych zasobów
-				runRequireMap(configGlobal, {}, getListPreLoad(), getTimeoutStart());
+                runRequireMap(configGlobal, mapAmd, getListPreLoad(), getTimeoutStart());
                 return true;
+
+            } else {
+                return false;
+            
 			}
 			
             
@@ -1712,11 +1702,27 @@
         
         
 //parseFuncBeginForBuilder
-        function mapParser(data) {
+        function mapParser(node) {
             
-            if (isNoEmptyString(data) === false) {
+            
+            var data = node.getAttribute("data-amd-map");
+            
+            
+            if (typeof(data) === "string") {
+                
+                if (data === "") {
+                    return {};
+                
+                } else {
+                    //dalsze parsowanie
+                
+                }
+                
+            } else {
                 return null;
+            
             }
+            
             
             var chunks = data.split(" ");
             

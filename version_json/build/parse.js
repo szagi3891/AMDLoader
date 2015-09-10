@@ -1,9 +1,22 @@
-        function mapParser(data) {
+        function mapParser(node) {
             
-            if (typeof(data) === "string" && data !== "") {
+            var data = node.getAttribute("data-static-amd-map");
+            
+            if (typeof(data) === "string") {
+                
+                if (data === "") {
+                    return {};
+                
+                } else {
+                    //dalsze parsowanie
+                
+                }
+                
             } else {
                 return null;
+            
             }
+            
             
             if (typeof(JSON) !== "undefined" && typeof(JSON.parse) === "function") {
                 return JSON.parse(data);
