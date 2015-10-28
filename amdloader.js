@@ -1595,16 +1595,11 @@
 
                 var timeoutStart = node.getAttribute("data-timeout-start");
 
-                if (isInt(timeoutStart) && timeoutStart > 0) {
+                if (timeoutStart > 0) {
                     return timeoutStart;
                 } else {
                     return 2000;
                 }
-            }
-
-            function isInt(value){
-
-                return (typeof(value) === 'number' && !isNaN(value) && (value === (value | 0)));
             }
         }
         
