@@ -4,7 +4,7 @@
     
     Available via the MIT or new BSD license.
     see: http://github.com/szagi3891/AMDLoader for details
-    version 2.2
+    version 2.3
     
     1  : "Config: Niepoprawna zawartość klucza 'paths'"
     2.1 : "Config: próba konfiguracji z zewnątrz"
@@ -1271,9 +1271,14 @@
                             if (module && typeof(module[moduleMethod]) === "function") {
                                 
                                 item.setAttribute(attrNameToRun + "-isrun", "1");
-                            
-                                var modEval = module[moduleMethod](item);
-                                getObject(item).setValue(modEval);
+								
+                                var modEval = module[moduleMethod](item, function(apiModule){
+									getObject(item).setValue(apiModule);
+								});
+															//zaszłość, do usunięcia
+								if (typeof(modEval) !== "undefined") {
+									getObject(item).setValue(modEval);
+								}
 
                             } else {
                                 
