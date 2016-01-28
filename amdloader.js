@@ -4,7 +4,7 @@
     
     Available via the MIT or new BSD license.
     see: http://github.com/szagi3891/AMDLoader for details
-    version 2.3
+    version 2.4
     
     1  : "Config: Niepoprawna zawartość klucza 'paths'"
     2.1 : "Config: próba konfiguracji z zewnątrz"
@@ -74,9 +74,9 @@
     
     
     var isArray        = createIsArray();
-    var modulesList    = createModuleList();      //mapa z modułami (oraz zależnościami)
-    var scriptLoader   = null;                    //obiekt którym ładujemy pliki (tworzony po podaiu mapy z konfiguracją)
-    var logs           = createLogs();            //logi
+    var modulesList    = createModuleList();        //mapa z modułami (oraz zależnościami)
+    var scriptLoader   = null;                      //obiekt którym ładujemy pliki (tworzony po podaiu mapy z konfiguracją)
+    var logs_list      = [];                        //logi
     
     
                                         //interfejs publiczny
@@ -86,7 +86,7 @@
     freezProperty(requireGlobal          , "runnerBox" , createRunnerBox(requireGlobal)    , false, 29);
     freezProperty(requireGlobal.runnerBox, "runElement", requireGlobal.runnerBox.runElement, false, 30);
     freezProperty(requireGlobal.runnerBox, "whenRun"   , requireGlobal.runnerBox.whenRun   , false, 31);
-    freezProperty(requireGlobal          , "getLogs"   , logs.getLogs                      , false, 32);
+    freezProperty(requireGlobal          , "getLogs"   , getLogs                           , false, 32);
     
     freezProperty(requireGlobal          , "defined"   , isLoad                            , false, 33);
     
@@ -120,36 +120,16 @@
         return false;
     }
     
-    function createLogs() {
-        
-        var list = [];
-        
-        return {
-            error   : error,
-            warn    : warn,
-            info    : info,
-            getLogs : getLogs
-        };
-        
-        function error(num, caption) {
-            
-            push("err", num, caption);
-            throwError(num, caption);
-        }
-        
-        function warn(num, caption) {
-            
-            push("warn", num, caption);
-        }
-        
-        function info(num, caption) {
-            push("info", num, caption);
-        }
+    
+    function logs_error(num, caption) {
+
+        logs_push("err", num, caption);
+        throwError(num, caption);
         
         function throwError(num, caption) {
 
             var messFormat = "amdLoader: errorNumber: " + num;
-            
+
             if (typeof(caption) === "string" && caption !== "") {
                 messFormat += ": " + caption;
             }
@@ -162,72 +142,69 @@
                 throw err;
             }
         }
+    }
+
+    function logs_warn(num, caption) {
+
+        logs_push("warn", num, caption);
+    }
+
+    function logs_info(num, caption) {
+        logs_push("info", num, caption);
+    }
+
+
+    function logs_push(type, num, caption) {
+
+        var record = {
+            type    : "warn",
+            num     : num,
+            caption : caption,
+            time    : new Date()
+        };
+
+        logs_list.push(record);
+    }
+
+    function getLogs(show) {
         
-        function push(type, num, caption) {
-            
-            var record = {
-                type    : "warn",
-                num     : num,
-                caption : caption,
-                time    : new Date()
-            };
-            
-            list.push(record);
-            
-            //console.warn(record);
+        if (show === true) {
+            showLog();
+            return;
         }
         
-        function getLogs(show) {
-            
-            if (show === true) {
-                showLog();
-                return;
-            }
-            
-            var copy = [];
-            
-            for (var i=0; i<list.length; i++) {
-                copy.push(list[i]);
-            }
-            
-            return copy;
-            
-            function showLog() {
-                
-                var mapFunc = {
-                    warn : getFunc("warn"),
-                    log  : getFunc("log"),
-                    err  : getFunc("error")
-                };
-                
-                window.console.group();
-                
-                for (var i=0; i<list.length; i++) {
-                    showItem(list[i]);
-                }
-                
-                window.console.groupEnd();
-                
-                
-                function showItem(item) {
-                    
-                    var hours      = item.time.getHours();
-                    var minutes    = item.time.getMinutes();
-                    var seconds    = item.time.getSeconds();
+        var copy = [];
 
-                    var timeFormat = hours + ':' + minutes + ':' + seconds;
-                    
-                    mapFunc[item.type](timeFormat, item.num, item.caption)
-                }
+        for (var i=0; i<logs_list.length; i++) {
+            copy.push(logs_list[i]);
+        }
+
+        return copy;
+        
+        function showLog() {
+
+            window.console.group();
+
+            for (var i=0; i<logs_list.length; i++) {
+                showItem(logs_list[i]);
+            }
+
+            window.console.groupEnd();
+
+
+            function showItem(item) {
+
+                var hours      = item.time.getHours();
+                var minutes    = item.time.getMinutes();
+                var seconds    = item.time.getSeconds();
+
+                var timeFormat = hours + ':' + minutes + ':' + seconds;
                 
-                function getFunc(name) {
-                    return function(mess1, mess2, mess3) {
-                        window.console[name](mess1, mess2, mess3);
-                    };
-                }
+                window.console[item.type](timeFormat, item.num, item.caption);
             }
         }
     }
+    
     
     function freezProperty(obj, prop, value, isDepreceted, errorCode, errorCaption) {
         
@@ -254,14 +231,14 @@
                 get: function() {
                     
                     if (isDepreceted === true) {
-                        logs.warn(errorCode + "->1", errorCaption);
+                        logs_warn(errorCode + "->1", errorCaption);
                     }
                     
                     return value;
                 
                 }, set: function(/*val*/) {
                     
-                    logs.error(errorCode + "->2", errorCaption);
+                    logs_error(errorCode + "->2", errorCaption);
                 
                 }, configurable : isConfigurable
             });
@@ -276,7 +253,7 @@
             
         } else {
             
-            logs.error(26);
+            logs_error(26);
         }
     }
     
@@ -288,7 +265,7 @@
 
         } else {
             
-            logs.error(2.2);
+            logs_error(2.2);
         }
     }
 
@@ -296,7 +273,7 @@
         
         if (scriptLoader === null) {
             
-            logs.error(3);
+            logs_error(3);
             
         } else {
             
@@ -308,7 +285,7 @@
                 
                 } else {
                     
-                    logs.error(24.2);
+                    logs_error(24.2);
                 }
             }
         }
@@ -318,7 +295,7 @@
 
         if (scriptLoader === null) {
             
-            logs.warn(4);
+            logs_warn(4);
         
         } else {
             
@@ -337,9 +314,9 @@
             } else if (arguments.length === 3) {
                 
                 if (isNoEmptyString(deps)) {
-                    logs.warn("25.4", deps);
+                    logs_warn("25.4", deps);
                 } else {
-                    logs.warn("25.4");
+                    logs_warn("25.4");
                 }
                 
                 if (isValidParams(moduleDefine, thirdArgs, "25.4")) {
@@ -348,7 +325,7 @@
                 
             } else {
                 
-                logs.error("25.5");
+                logs_error("25.5");
             }
         }
     }
@@ -364,12 +341,12 @@
 
             } else {
 
-                logs.error(code + "->1");        //, prop
+                logs_error(code + "->1");        //, prop
             }
 
         } else {
 
-            logs.error(code + "->2");
+            logs_error(code + "->2");
         }
         
         return false;
@@ -397,7 +374,7 @@
             
             if (chunks.length < 2) {
                 
-                logs.error(5, path);
+                logs_error(5, path);
                 return;
             }
             
@@ -443,7 +420,7 @@
 
                     } else {
 
-                        logs.error(6, baseDir + " , " + dirModule + " -> " + outPath);
+                        logs_error(6, baseDir + " , " + dirModule + " -> " + outPath);
                     }
                 
                 } else {
@@ -453,7 +430,7 @@
             
             } else {
                 
-                logs.error(7, dirModule);
+                logs_error(7, dirModule);
             }
         }
         
@@ -476,7 +453,7 @@
 
                         } else {
                             
-                            logs.error(8, basePathModule + " -> " + deps[i]);
+                            logs_error(8, basePathModule + " -> " + deps[i]);
                             return;
                         }
                     }
@@ -486,7 +463,7 @@
                 
             } else {
                 
-                logs.error(9, moduleName);
+                logs_error(9, moduleName);
             }
         }
         
@@ -502,7 +479,7 @@
                 
                 if (depsName in retValue) {
                     
-                    logs.error(10, depsName);
+                    logs_error(10, depsName);
                     
                 } else {
                     
@@ -524,7 +501,7 @@
 
                         } else {
 
-                            logs.error(11, depsName);
+                            logs_error(11, depsName);
                         }
                     });
                 }
@@ -594,7 +571,7 @@
 
                     if (isCircleDeps(actualLoadingPath, item.deps)) {
 
-                        logs.error(12.1, actualLoadingPath);
+                        logs_error(12.1, actualLoadingPath);
 
                     } else {
                         
@@ -606,7 +583,7 @@
                 
             } else {
                 
-                logs.error(13, actualLoadingPath);
+                logs_error(13, actualLoadingPath);
             }
         }
         
@@ -620,9 +597,9 @@
             if (isFirstRequire !== true) {
             
                 if (currentScript === null) {
-                    logs.warn(49, "");
+                    logs_warn(49, "");
                 } else {
-                    logs.warn(49, getCurrentScript().getAttribute("src"));
+                    logs_warn(49, getCurrentScript().getAttribute("src"));
                 }
                 
                 return;
@@ -650,7 +627,7 @@
                 
                 } else {
                     
-                    logs.error(46, actualLoading);
+                    logs_error(46, actualLoading);
                 }
                 
                 return;
@@ -761,7 +738,7 @@
             
             if (isClose === true) {
                 
-                logs.error(45, nameModule);
+                logs_error(45, nameModule);
                 return;
             }
             
@@ -783,7 +760,7 @@
                         
                         } catch (errEval) {
                             
-                            logs.error(14, nameModule + ' -> ' + errEval);
+                            logs_error(14, nameModule + ' -> ' + errEval);
                             
                             return;
                         }
@@ -794,7 +771,7 @@
 
             } else {
                 
-                logs.error(15, nameModule);
+                logs_error(15, nameModule);
             }
         }
         
@@ -847,7 +824,7 @@
             if (path.length > 0 && path[0] === ".") {
                 
                 if (errReport === true) {
-                    logs.error(16, path);
+                    logs_error(16, path);
                 }
             
                 return;
@@ -886,7 +863,7 @@
                         } else {
                             
                             if (errReport === true) {
-                                logs.error(17, path);
+                                logs_error(17, path);
                             }
                             
                             return;
@@ -896,7 +873,7 @@
             }
             
             if (errReport === true) {
-                logs.error(18, path);
+                logs_error(18, path);
             }
         }
         
@@ -1063,12 +1040,12 @@
                     
                 } else {
                     
-                    logs.error(19);
+                    logs_error(19);
                 }
             
             } else {
                 
-                logs.error(20);
+                logs_error(20);
             }
         }
         
@@ -1106,7 +1083,7 @@
                 
             } else {
                 
-                logs.error(21);
+                logs_error(21);
             }
         }
     }
@@ -1181,7 +1158,7 @@
                     isReady = true;
                     refresh();
                 } else {
-                    logs.error(41);
+                    logs_error(41);
                     refresh();
                 }
             }
@@ -1220,7 +1197,7 @@
                 if (isRunFlag === false) {
                     isRunFlag = true;
                 } else {
-                    logs.error(44);
+                    logs_error(44);
                 }
             }
             
@@ -1232,7 +1209,7 @@
                     event.exec();
                 
                 } else {
-                    logs.error(42);
+                    logs_error(42);
                 }
             }
         }
@@ -1250,7 +1227,7 @@
                 var part = widgetName.split(".");
 
                 if (part.length !== 2) {
-                    throw Error("Nieprawidłowy format uruchamianego modułu: " + widgetName);
+                    throw Error("irregulari contents of the attribute data-run-module: " + widgetName);
                 }
                                 
                 
@@ -1272,14 +1249,10 @@
                                 
                                 item.setAttribute(attrNameToRun + "-isrun", "1");
 								
-                                var modEval = module[moduleMethod](item, function(apiModule){
+                                module[moduleMethod](item, function(apiModule){
 									getObject(item).setValue(apiModule);
 								});
-															//zaszłość, do usunięcia
-								if (typeof(modEval) !== "undefined") {
-									getObject(item).setValue(modEval);
-								}
-
+                            
                             } else {
                                 
                                 message = "No function \"" + moduleMethod + "\" in module : " + moduleName;
@@ -1513,7 +1486,7 @@
             
             } else {
             
-                logs.error(43);
+                logs_error(43);
             }
         }
         
@@ -1624,13 +1597,13 @@
             
             addEvent(window, "load", function(){
                 
-                logs.info(48, "window.load");
+                logs_info(48, "window.load");
                 
                 runMain()
                                             //dodatkowe zabezpieczenie
                 setTimeout(function(){
                     
-                    logs.info(48, "window.load -> 10s");
+                    logs_info(48, "window.load -> 10s");
                     runMain();
                 
                 }, 10000);
@@ -1639,25 +1612,25 @@
             
             if (documentIsComplete()) {
                 
-                logs.info(48, "isComplete");
+                logs_info(48, "isComplete");
                 runMain();
             }
             
             if (documentIsLoaded()) {
                 
-                logs.info(48, "isLoaded");
+                logs_info(48, "isLoaded");
                 runTimeout();
             }
             
             addEvent(document, 'DOMContentLoaded', function(){
                 
-                logs.info(48, "DOMContentLoaded");
+                logs_info(48, "DOMContentLoaded");
                 runTimeout();
                 
                 //http://www.w3schools.com/jsref/event_onpageshow.asp
                 addEvent(document.getElementsByTagName('body')[0], 'pageshow', function(){
                     
-                    logs.info(48, "body pageshow");
+                    logs_info(48, "body pageshow");
                     runMain();
                 });
             });
@@ -1668,12 +1641,12 @@
                 
                 if (documentIsComplete() || documentIsLoaded()) {
                     
-                    logs.info(48, message + " - exec");
+                    logs_info(48, message + " - exec");
                     runTimeout();
                 
                 } else {
                     
-                    logs.info(48, message + " - noexec");
+                    logs_info(48, message + " - noexec");
                 }
             });
             
@@ -1752,12 +1725,12 @@
 
                 if (parseOk === true) {
                     if (map[itemKey]) {
-                        logs.error(47.1, itemKey);
+                        logs_error(47.1, itemKey);
                     } else {
                         map[itemKey] = itemValue;
                     }
                 } else {
-                    logs.error(47.2,  + chunks[i]);
+                    logs_error(47.2,  + chunks[i]);
                 }
             }
         }
