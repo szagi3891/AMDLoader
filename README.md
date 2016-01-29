@@ -20,8 +20,9 @@ Ta biblioteka zawiera również loader który pozwala na automatyczne uruchamian
 Atrybut data-amd-map określa mapowanie katalogów z modułami na konkretne ścieżki na serwerze. Dzięki temu zamiast podawać pełną ścieżkę do modułu (js/lib1/box2) można użyć skróconą wersję np. lib2/box2.
 
 Przypisanie modułu do określonego taga na stronie :
+```html
 <div data-run-module="lib/box.renderTime" data-color="red">module1</div>
-
+```
 
 ##Uruchamianie :
 Amdloader uruchamia automatycznie wszystkie elementy na stronie które są oznaczone tym atrybutem "data-run-module".
