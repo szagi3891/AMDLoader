@@ -11,11 +11,13 @@ Ta biblioteka zawiera również loader który pozwala na automatyczne uruchamian
 
 
 ##Loader w head strony :
+```html
 <script
     type="text/javascript"
     src="amdloader.js"
     data-amd-map="lib:js/lib1 lib2:js/lib1"
 ></script>
+```
 
 Atrybut data-amd-map określa mapowanie katalogów z modułami na konkretne ścieżki na serwerze. Dzięki temu zamiast podawać pełną ścieżkę do modułu (js/lib1/box2) można użyć skróconą wersję np. lib2/box2.
 
