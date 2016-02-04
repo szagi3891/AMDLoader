@@ -4,7 +4,7 @@
     
     Available via the MIT or new BSD license.
     see: http://github.com/szagi3891/AMDLoader for details
-    version 2.4
+    version 2.5
     
     1  : "Config: Niepoprawna zawartość klucza 'paths'"
     2.1 : "Config: próba konfiguracji z zewnątrz"
@@ -73,10 +73,11 @@
     */
     
     
-    var isArray        = createIsArray();
-    var modulesList    = createModuleList();        //mapa z modułami (oraz zależnościami)
-    var scriptLoader   = null;                      //obiekt którym ładujemy pliki (tworzony po podaiu mapy z konfiguracją)
-    var logs_list      = [];                        //logi
+    var isArray         = createIsArray();
+    var modulesList     = createModuleList();        //mapa z modułami (oraz zależnościami)
+    var scriptLoader    = null;                      //obiekt którym ładujemy pliki (tworzony po podaiu mapy z konfiguracją)
+    var logs_list       = [];                        //logi
+    var logs_time_start = get_curent_milisecond();
     
     
                                         //interfejs publiczny
@@ -153,14 +154,17 @@
         logs_push("info", num, caption);
     }
 
-
+    function get_curent_milisecond() {
+        return (new Date()).getTime();
+    }
+    
     function logs_push(type, num, caption) {
 
         var record = {
             type    : "warn",
             num     : num,
             caption : caption,
-            time    : new Date()
+            time    : get_curent_milisecond() - logs_time_start
         };
 
         logs_list.push(record);
@@ -193,14 +197,14 @@
 
 
             function showItem(item) {
-
+                /*
                 var hours      = item.time.getHours();
                 var minutes    = item.time.getMinutes();
                 var seconds    = item.time.getSeconds();
 
                 var timeFormat = hours + ':' + minutes + ':' + seconds;
-                
-                window.console[item.type](timeFormat, item.num, item.caption);
+                */
+                window.console[item.type](item.time, item.num, item.caption);
             }
         }
     }
@@ -1599,7 +1603,7 @@
                 
                 logs_info(48, "window.load");
                 
-                runMain()
+                runMain();
                                             //dodatkowe zabezpieczenie
                 setTimeout(function(){
                     
@@ -1652,16 +1656,25 @@
             
             function runTimeout() {
 
-                setTimeout(runMain, timeoutStart);
+                setTimeout(function(){
+                    
+                    logs_info(48, "run timeout " + timeoutStart);
+                    runMain();
+                    
+                }, timeoutStart);
             }
             
             function runMain() {
                 
-                if (listPreload.length > 0) {
-                    require(listPreload, function(){});
-                }
-
-                require.runnerBox.runElement(document);
+                setTimeout(function(){
+                    
+                    if (listPreload.length > 0) {
+                        require(listPreload, function(){});
+                    }
+                    
+                    require.runnerBox.runElement(document);
+                
+                }, 0);
             }
             
             function documentIsComplete() {
