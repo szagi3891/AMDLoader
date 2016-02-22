@@ -2,4 +2,5 @@
 
 set -e
 
-go run ./build.go
+cd ./builder/ && cargo run
+
