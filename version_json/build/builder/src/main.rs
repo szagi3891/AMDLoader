@@ -34,9 +34,16 @@ fn main() {
             State::Begin => {
                 
                 if line == marker_begin.as_str() {
+                    
                     out.push(parser.as_str());
                     State::In
+                
+                } else if line == marker_end.as_str() {
+                    
+                    panic!("Nieprawidłowa koleność markerów");
+                    
                 } else {
+                    
                     out.push(line.clone());
                     State::Begin
                 }
@@ -44,28 +51,58 @@ fn main() {
             
             State::In => {
                 
-                if line == marker_end.as_str() {
+                if line == marker_begin.as_str() {
+                    
+                    panic!("Nieprawidłowa koleność markerów");
+                    
+                } else if line == marker_end.as_str() {
+                    
                     State::End
+                    
                 } else {
+                    
                     State::In
                 }
             },
             
             State::End => {
-                out.push(line);
-                State::End
+                
+                if line == marker_begin.as_str() {
+                    
+                    panic!("Nieprawidłowa koleność markerów");
+                    
+                } else if line == marker_end.as_str() {
+                    
+                    panic!("Nieprawidłowa koleność markerów");
+                    
+                } else {
+                    
+                    out.push(line);
+                    State::End
+                }
             },
         };
     }
     
-    let mut file_out = File::create("../../amdloader.js").unwrap();
     
-    for line in out {
-        file_out.write_all(line.as_bytes()).unwrap();
-        file_out.write_all("\n".as_bytes()).unwrap();
+    match state {
+        
+        State::End => {
+
+            let mut file_out = File::create("../../amdloader.js").unwrap();
+
+            for line in out {
+                file_out.write_all(line.as_bytes()).unwrap();
+                file_out.write_all("\n".as_bytes()).unwrap();
+            }
+
+            println!("plik zbudowano ...");
+        },
+        
+        _ => {
+            panic!("Nieprawidłowy stan");
+        }
     }
-    
-    println!("plik zbudowano ...");
 }
 
 
