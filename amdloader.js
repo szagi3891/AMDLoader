@@ -1258,7 +1258,7 @@
                                     getObject(item).setValue(apiModule);
                                 });
                                 
-                                if (typeof(depreceteApi) !== "undefined") {
+                                if (typeof(outdatedApi) !== "undefined") {
                                     
                                     logs_error(50, widgetName);
                                     getObject(item).setValue(outdatedApi);
