@@ -4,7 +4,7 @@
     
     Available via the MIT or new BSD license.
     see: http://github.com/szagi3891/AMDLoader for details
-    version 2.5
+    version 2.6
     
     1  : "Config: Niepoprawna zawartość klucza 'paths'"
     2.1 : "Config: próba konfiguracji z zewnątrz"
@@ -70,6 +70,7 @@
     47.2 "Parsowanie mapy: Problem ze sparsowaniem wpisu: "
     48 : zaszło zdarzenie wyzwalające przetwarzanie całego dokumentu
     49 : wywołano define, zanim zaszło pierwsze żadanie o dynamiczny zasób
+    50 : funkcja renderująca, nieprawidłowo udostępniła swoje api
     */
     
     
@@ -1253,9 +1254,15 @@
                                 
                                 item.setAttribute(attrNameToRun + "-isrun", "1");
 								
-                                module[moduleMethod](item, function(apiModule){
-									getObject(item).setValue(apiModule);
-								});
+                                var outdatedApi = module[moduleMethod](item, function(apiModule){
+                                    getObject(item).setValue(apiModule);
+                                });
+                                
+                                if (typeof(depreceteApi) !== "undefined") {
+                                    
+                                    logs_error(50, widgetName);
+                                    getObject(item).setValue(outdatedApi);
+                                }
                             
                             } else {
                                 
