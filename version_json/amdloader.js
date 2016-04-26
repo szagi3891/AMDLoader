@@ -4,7 +4,7 @@
     
     Available via the MIT or new BSD license.
     see: http://github.com/szagi3891/AMDLoader for details
-    version 2.6
+    version 2.7
     
     1  : "Config: Niepoprawna zawartość klucza 'paths'"
     2.1 : "Config: próba konfiguracji z zewnątrz"
@@ -305,24 +305,27 @@
         } else {
             
             if (arguments.length === 1) {
-                
+                                                                //define(function(){
                 if (isValidParams([], deps, "25.1")) {
                     modulesList.define([], deps);
                 }
             
             } else if (arguments.length === 2) {
+                                                                //define("modulename", function(){
                 
-                if (isValidParams(deps, moduleDefine, "25.2")) {
+                if (typeof(deps) === "string" && typeof(moduleDefine) === "function") {
+                    
+                    log_error_deps("25.3", deps);   
+                    modulesList.define([], moduleDefine);
+                    
+                                                                //define(["mods ..."], function(){
+                } else if (isValidParams(deps, moduleDefine, "25.2")) {
                     modulesList.define(deps, moduleDefine);
                 }
             
             } else if (arguments.length === 3) {
-                
-                if (isNoEmptyString(deps)) {
-                    logs_warn("25.4", deps);
-                } else {
-                    logs_warn("25.4");
-                }
+                                                                //define("modulename", ["mods ..."], function(){
+                log_error_deps("25.4", deps);
                 
                 if (isValidParams(moduleDefine, thirdArgs, "25.4")) {
                     modulesList.define(moduleDefine, thirdArgs);
@@ -331,6 +334,15 @@
             } else {
                 
                 logs_error("25.5");
+            }
+        }
+        
+        function log_error_deps(code, deps) {
+            
+            if (isNoEmptyString(deps)) {
+                logs_warn(code, deps);
+            } else {
+                logs_warn(code);
             }
         }
     }
